@@ -384,66 +384,69 @@
 
 <script>
 // --- DATA (Embedded from your PDF analysis) ---
+
+// ** CORRECTED ATLAS INDEX WITH +13 PAGE OFFSET **
 const atlasIndex = [
-  { "gender": "Male", "age": "Newborn (term)", "ageInMonths": 0, "pageAnnotated": 14, "pageUnannotated": 15 },
-  { "gender": "Male", "age": "3 Months", "ageInMonths": 3, "pageAnnotated": 16, "pageUnannotated": 17 },
-  { "gender": "Male", "age": "6 Months", "ageInMonths": 6, "pageAnnotated": 18, "pageUnannotated": 19 },
-  { "gender": "Male", "age": "9 Months", "ageInMonths": 9, "pageAnnotated": 20, "pageUnannotated": 21 },
-  { "gender": "Male", "age": "1 Year", "ageInMonths": 12, "pageAnnotated": 22, "pageUnannotated": 23 },
-  { "gender": "Male", "age": "1 Year 3 Months", "ageInMonths": 15, "pageAnnotated": 24, "pageUnannotated": 25 },
-  { "gender": "Male", "age": "1 Year 6 Months", "ageInMonths": 18, "pageAnnotated": 26, "pageUnannotated": 27 },
-  { "gender": "Male", "age": "2 Years", "ageInMonths": 24, "pageAnnotated": 28, "pageUnannotated": 29 },
-  { "gender": "Male", "age": "2 Years 8 Months", "ageInMonths": 32, "pageAnnotated": 30, "pageUnannotated": 31 },
-  { "gender": "Male", "age": "3 Years", "ageInMonths": 36, "pageAnnotated": 32, "pageUnannotated": 33 },
-  { "gender": "Male", "age": "3 Years 6 Months", "ageInMonths": 42, "pageAnnotated": 34, "pageUnannotated": 35 },
-  { "gender": "Male", "age": "4 Years", "ageInMonths": 48, "pageAnnotated": 36, "pageUnannotated": 37 },
-  { "gender": "Male", "age": "4 Years 6 Months", "ageInMonths": 54, "pageAnnotated": 38, "pageUnannotated": 39 },
-  { "gender": "Male", "age": "5 Years", "ageInMonths": 60, "pageAnnotated": 40, "pageUnannotated": 41 },
-  { "gender": "Male", "age": "6 Years", "ageInMonths": 72, "pageAnnotated": 42, "pageUnannotated": 43 },
-  { "gender": "Male", "age": "7 Years", "ageInMonths": 84, "pageAnnotated": 44, "pageUnannotated": 45 },
-  { "gender": "Male", "age": "8 Years", "ageInMonths": 96, "pageAnnotated": 46, "pageUnannotated": 47 },
-  { "gender": "Male", "age": "9 Years", "ageInMonths": 108, "pageAnnotated": 48, "pageUnannotated": 49 },
-  { "gender": "Male", "age": "10 Years", "ageInMonths": 120, "pageAnnotated": 50, "pageUnannotated": 51 },
-  { "gender": "Male", "age": "11 Years", "ageInMonths": 132, "pageAnnotated": 52, "pageUnannotated": 53 },
-  { "gender": "Male", "age": "11 Years 6 Months", "ageInMonths": 138, "pageAnnotated": 54, "pageUnannotated": 55 },
-  { "gender": "Male", "age": "12 Years 6 Months", "ageInMonths": 150, "pageAnnotated": 56, "pageUnannotated": 57 },
-  { "gender": "Male", "age": "13 Years", "ageInMonths": 156, "pageAnnotated": 58, "pageUnannotated": 59 },
-  { "gender": "Male", "age": "13 Years 6 Months", "ageInMonths": 162, "pageAnnotated": 60, "pageUnannotated": 61 },
-  { "gender": "Male", "age": "14 Years", "ageInMonths": 168, "pageAnnotated": 62, "pageUnannotated": 63 },
-  { "gender": "Male", "age": "15 Years", "ageInMonths": 180, "pageAnnotated": 64, "pageUnannotated": 65 },
-  { "gender": "Male", "age": "15 Years 6 Months", "ageInMonths": 186, "pageAnnotated": 66, "pageUnannotated": 67 },
-  { "gender": "Male", "age": "16 Years", "ageInMonths": 192, "pageAnnotated": 68, "pageUnannotated": 69 },
-  { "gender": "Male", "age": "17 Years", "ageInMonths": 204, "pageAnnotated": 70, "pageUnannotated": 71 },
-  { "gender": "Male", "age": "18 Years", "ageInMonths": 216, "pageAnnotated": 72, "pageUnannotated": 73 },
-  { "gender": "Male", "age": "19 Years", "ageInMonths": 228, "pageAnnotated": 74, "pageUnannotated": 75 },
-  { "gender": "Female", "age": "Newborn (term)", "ageInMonths": 0, "pageAnnotated": 78, "pageUnannotated": 79 },
-  { "gender": "Female", "age": "3 Months", "ageInMonths": 3, "pageAnnotated": 80, "pageUnannotated": 81 },
-  { "gender": "Female", "age": "6 Months", "ageInMonths": 6, "pageAnnotated": 82, "pageUnannotated": 83 },
-  { "gender": "Female", "age": "9 Months", "ageInMonths": 9, "pageAnnotated": 84, "pageUnannotated": 85 },
-  { "gender": "Female", "age": "1 Year", "ageInMonths": 12, "pageAnnotated": 86, "pageUnannotated": 87 },
-  { "gender": "Female", "age": "1 Year 3 Months", "ageInMonths": 15, "pageAnnotated": 88, "pageUnannotated": 89 },
-  { "gender": "Female", "age": "1 Year 6 Months", "ageInMonths": 18, "pageAnnotated": 90, "pageUnannotated": 91 },
-  { "gender": "Female", "age": "2 Years", "ageInMonths": 24, "pageAnnotated": 92, "pageUnannotated": 93 },
-  { "gender": "Female", "age": "2 Years 6 Months", "ageInMonths": 30, "pageAnnotated": 94, "pageUnannotated": 95 },
-  { "gender": "Female", "age": "3 Years", "ageInMonths": 36, "pageAnnotated": 96, "pageUnannotated": 97 },
-  { "gender": "Female", "age": "3 Years 6 Months", "ageInMonths": 42, "pageAnnotated": 98, "pageUnannotated": 99 },
-  { "gender": "Female", "age": "4 Years 2 Months", "ageInMonths": 50, "pageAnnotated": 100, "pageUnannotated": 101 },
-  { "gender": "Female", "age": "5 Years", "ageInMonths": 60, "pageAnnotated": 102, "pageUnannotated": 103 },
-  { "gender": "Female", "age": "5 Years 9 Months", "ageInMonths": 69, "pageAnnotated": 104, "pageUnannotated": 105 },
-  { "gender": "Female", "age": "6 Years 10 Months", "ageInMonths": 82, "pageAnnotated": 106, "pageUnannotated": 107 },
-  { "gender": "Female", "age": "7 Years 10 Months", "ageInMonths": 94, "pageAnnotated": 108, "pageUnannotated": 109 },
-  { "gender": "Female", "age": "8 Years 10 Months", "ageInMonths": 106, "pageAnnotated": 110, "pageUnannotated": 111 },
-  { "gender": "Female", "age": "10 Years", "ageInMonths": 120, "pageAnnotated": 112, "pageUnannotated": 113 },
-  { "gender": "Female", "age": "11 Years", "ageInMonths": 132, "pageAnnotated": 114, "pageUnannotated": 115 },
-  { "gender": "Female", "age": "12 Years", "ageInMonths": 144, "pageAnnotated": 116, "pageUnannotated": 117 },
-  { "gender": "Female", "age": "13 Years", "ageInMonths": 156, "pageAnnotated": 118, "pageUnannotated": 119 },
-  { "gender": "Female", "age": "13 Years 6 Months", "ageInMonths": 162, "pageAnnotated": 120, "pageUnannotated": 121 },
-  { "gender": "Female", "age": "14 Years", "ageInMonths": 168, "pageAnnotated": 122, "pageUnannotated": 123 },
-  { "gender": "Female", "age": "15 Years", "ageInMonths": 180, "pageAnnotated": 124, "pageUnannotated": 125 },
-  { "gender": "Female", "age": "16 Years", "ageInMonths": 192, "pageAnnotated": 126, "pageUnannotated": 127 },
-  { "gender": "Female", "age": "17 Years", "ageInMonths": 204, "pageAnnotated": 128, "pageUnannotated": 129 },
-  { "gender": "Female", "age": "18 Years", "ageInMonths": 216, "pageAnnotated": 130, "pageUnannotated": 131 }
+  { "gender": "Male", "age": "Newborn (term)", "ageInMonths": 0, "pageAnnotated": 27, "pageUnannotated": 28 },
+  { "gender": "Male", "age": "3 Months", "ageInMonths": 3, "pageAnnotated": 29, "pageUnannotated": 30 },
+  { "gender": "Male", "age": "6 Months", "ageInMonths": 6, "pageAnnotated": 31, "pageUnannotated": 32 },
+  { "gender": "Male", "age": "9 Months", "ageInMonths": 9, "pageAnnotated": 33, "pageUnannotated": 34 },
+  { "gender": "Male", "age": "1 Year", "ageInMonths": 12, "pageAnnotated": 35, "pageUnannotated": 36 },
+  { "gender": "Male", "age": "1 Year 3 Months", "ageInMonths": 15, "pageAnnotated": 37, "pageUnannotated": 38 },
+  { "gender": "Male", "age": "1 Year 6 Months", "ageInMonths": 18, "pageAnnotated": 39, "pageUnannotated": 40 },
+  { "gender": "Male", "age": "2 Years", "ageInMonths": 24, "pageAnnotated": 41, "pageUnannotated": 42 },
+  { "gender": "Male", "age": "2 Years 8 Months", "ageInMonths": 32, "pageAnnotated": 43, "pageUnannotated": 44 },
+  { "gender": "Male", "age": "3 Years", "ageInMonths": 36, "pageAnnotated": 45, "pageUnannotated": 46 },
+  { "gender": "Male", "age": "3 Years 6 Months", "ageInMonths": 42, "pageAnnotated": 47, "pageUnannotated": 48 },
+  { "gender": "Male", "age": "4 Years", "ageInMonths": 48, "pageAnnotated": 49, "pageUnannotated": 50 },
+  { "gender": "Male", "age": "4 Years 6 Months", "ageInMonths": 54, "pageAnnotated": 51, "pageUnannotated": 52 },
+  { "gender": "Male", "age": "5 Years", "ageInMonths": 60, "pageAnnotated": 53, "pageUnannotated": 54 },
+  { "gender": "Male", "age": "6 Years", "ageInMonths": 72, "pageAnnotated": 55, "pageUnannotated": 56 },
+  { "gender": "Male", "age": "7 Years", "ageInMonths": 84, "pageAnnotated": 57, "pageUnannotated": 58 },
+  { "gender": "Male", "age": "8 Years", "ageInMonths": 96, "pageAnnotated": 59, "pageUnannotated": 60 },
+  { "gender": "Male", "age": "9 Years", "ageInMonths": 108, "pageAnnotated": 61, "pageUnannotated": 62 },
+  { "gender": "Male", "age": "10 Years", "ageInMonths": 120, "pageAnnotated": 63, "pageUnannotated": 64 },
+  { "gender": "Male", "age": "11 Years", "ageInMonths": 132, "pageAnnotated": 65, "pageUnannotated": 66 },
+  { "gender": "Male", "age": "11 Years 6 Months", "ageInMonths": 138, "pageAnnotated": 67, "pageUnannotated": 68 },
+  { "gender": "Male", "age": "12 Years 6 Months", "ageInMonths": 150, "pageAnnotated": 69, "pageUnannotated": 70 },
+  { "gender": "Male", "age": "13 Years", "ageInMonths": 156, "pageAnnotated": 71, "pageUnannotated": 72 },
+  { "gender": "Male", "age": "13 Years 6 Months", "ageInMonths": 162, "pageAnnotated": 73, "pageUnannotated": 74 },
+  { "gender": "Male", "age": "14 Years", "ageInMonths": 168, "pageAnnotated": 75, "pageUnannotated": 76 },
+  { "gender": "Male", "age": "15 Years", "ageInMonths": 180, "pageAnnotated": 77, "pageUnannotated": 78 },
+  { "gender": "Male", "age": "15 Years 6 Months", "ageInMonths": 186, "pageAnnotated": 79, "pageUnannotated": 80 },
+  { "gender": "Male", "age": "16 Years", "ageInMonths": 192, "pageAnnotated": 81, "pageUnannotated": 82 },
+  { "gender": "Male", "age": "17 Years", "ageInMonths": 204, "pageAnnotated": 83, "pageUnannotated": 84 },
+  { "gender": "Male", "age": "18 Years", "ageInMonths": 216, "pageAnnotated": 85, "pageUnannotated": 86 },
+  { "gender": "Male", "age": "19 Years", "ageInMonths": 228, "pageAnnotated": 87, "pageUnannotated": 88 },
+  { "gender": "Female", "age": "Newborn (term)", "ageInMonths": 0, "pageAnnotated": 91, "pageUnannotated": 92 },
+  { "gender": "Female", "age": "3 Months", "ageInMonths": 3, "pageAnnotated": 93, "pageUnannotated": 94 },
+  { "gender": "Female", "age": "6 Months", "ageInMonths": 6, "pageAnnotated": 95, "pageUnannotated": 96 },
+  { "gender": "Female", "age": "9 Months", "ageInMonths": 9, "pageAnnotated": 97, "pageUnannotated": 98 },
+  { "gender": "Female", "age": "1 Year", "ageInMonths": 12, "pageAnnotated": 99, "pageUnannotated": 100 },
+  { "gender": "Female", "age": "1 Year 3 Months", "ageInMonths": 15, "pageAnnotated": 101, "pageUnannotated": 102 },
+  { "gender": "Female", "age": "1 Year 6 Months", "ageInMonths": 18, "pageAnnotated": 103, "pageUnannotated": 104 },
+  { "gender": "Female", "age": "2 Years", "ageInMonths": 24, "pageAnnotated": 105, "pageUnannotated": 106 },
+  { "gender": "Female", "age": "2 Years 6 Months", "ageInMonths": 30, "pageAnnotated": 107, "pageUnannotated": 108 },
+  { "gender": "Female", "age": "3 Years", "ageInMonths": 36, "pageAnnotated": 109, "pageUnannotated": 110 },
+  { "gender": "Female", "age": "3 Years 6 Months", "ageInMonths": 42, "pageAnnotated": 111, "pageUnannotated": 112 },
+  { "gender": "Female", "age": "4 Years 2 Months", "ageInMonths": 50, "pageAnnotated": 113, "pageUnannotated": 114 },
+  { "gender": "Female", "age": "5 Years", "ageInMonths": 60, "pageAnnotated": 115, "pageUnannotated": 116 },
+  { "gender": "Female", "age": "5 Years 9 Months", "ageInMonths": 69, "pageAnnotated": 117, "pageUnannotated": 118 },
+  { "gender": "Female", "age": "6 Years 10 Months", "ageInMonths": 82, "pageAnnotated": 119, "pageUnannotated": 120 },
+  { "gender": "Female", "age": "7 Years 10 Months", "ageInMonths": 94, "pageAnnotated": 121, "pageUnannotated": 122 },
+  { "gender": "Female", "age": "8 Years 10 Months", "ageInMonths": 106, "pageAnnotated": 123, "pageUnannotated": 124 },
+  { "gender": "Female", "age": "10 Years", "ageInMonths": 120, "pageAnnotated": 125, "pageUnannotated": 126 },
+  { "gender": "Female", "age": "11 Years", "ageInMonths": 132, "pageAnnotated": 127, "pageUnannotated": 128 },
+  { "gender": "Female", "age": "12 Years", "ageInMonths": 144, "pageAnnotated": 129, "pageUnannotated": 130 },
+  { "gender": "Female", "age": "13 Years", "ageInMonths": 156, "pageAnnotated": 131, "pageUnannotated": 132 },
+  { "gender": "Female", "age": "13 Years 6 Months", "ageInMonths": 162, "pageAnnotated": 133, "pageUnannotated": 134 },
+  { "gender": "Female", "age": "14 Years", "ageInMonths": 168, "pageAnnotated": 135, "pageUnannotated": 136 },
+  { "gender": "Female", "age": "15 Years", "ageInMonths": 180, "pageAnnotated": 137, "pageUnannotated": 138 },
+  { "gender": "Female", "age": "16 Years", "ageInMonths": 192, "pageAnnotated": 139, "pageUnannotated": 140 },
+  { "gender": "Female", "age": "17 Years", "ageInMonths": 204, "pageAnnotated": 141, "pageUnannotated": 142 },
+  { "gender": "Female", "age": "18 Years", "ageInMonths": 216, "pageAnnotated": 143, "pageUnannotated": 144 }
 ];
+
 const standardDeviations = {
   // Converted ages to total months for easier lookup
   boys: [
@@ -510,7 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- APPLICATION STATE ---
     let state = {
         pdfDoc: null,
-        currentPageNum: 1,
+        currentPageNum: 1, // Start with the physical page 1 (cover)
         currentAtlasEntryIndex: -1,
         zoom: 1.0,
         isAnnotated: false,
@@ -524,7 +527,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- HELPER FUNCTIONS ---
     
-    // Calculate chronological age in years and months
     function calculateChronologicalAge(dob, studyDate) {
         if (!dob || !studyDate) return null;
         
@@ -536,6 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let years = d2.getFullYear() - d1.getFullYear();
         let months = d2.getMonth() - d1.getMonth();
         
+        // Adjust for day of the month
         if (d2.getDate() < d1.getDate()) {
             months--;
         }
@@ -545,8 +548,15 @@ document.addEventListener('DOMContentLoaded', () => {
             months += 12;
         }
 
-        // Round to the nearest month
-        if (d2.getDate() - d1.getDate() >= 15) {
+        // Round to the nearest month based on days
+        let dayDiff = d2.getDate() - d1.getDate();
+        if (dayDiff < 0) {
+            // Get days in previous month
+            let daysInPrevMonth = new Date(d2.getFullYear(), d2.getMonth(), 0).getDate();
+            dayDiff += daysInPrevMonth;
+        }
+
+        if (dayDiff >= 15) {
              months++;
              if (months === 12) {
                  months = 0;
@@ -557,7 +567,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return { years, months, totalMonths: (years * 12) + months };
     }
 
-    // Find the closest standard deviation for a given age and gender
     function findClosestSd(totalMonths, gender) {
         const data = (gender === 'Male') ? standardDeviations.boys : standardDeviations.girls;
         if (!data || data.length === 0) return null;
@@ -568,7 +577,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return closest.sdMonths;
     }
     
-    // Find the closest atlas standard for a given age and gender
     function findClosestAtlasIndex(totalMonths, gender) {
         const genderSpecificAtlas = atlasIndex.map((entry, index) => ({...entry, originalIndex: index}))
                                                .filter(entry => entry.gender === gender);
@@ -585,7 +593,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- RENDERING AND NAVIGATION ---
 
     async function renderPage(pageNum) {
-        if (!state.pdfDoc) return;
+        if (!state.pdfDoc || pageNum < 1 || pageNum > state.pdfDoc.numPages) return;
         dom.loader.style.display = 'block';
         dom.pdfViewer.style.display = 'none';
 
@@ -629,7 +637,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentGender = atlasIndex[state.currentAtlasEntryIndex].gender;
         let nextIndex = state.currentAtlasEntryIndex + direction;
 
-        // Find the next valid index for the same gender
         while (nextIndex >= 0 && nextIndex < atlasIndex.length) {
             if (atlasIndex[nextIndex].gender === currentGender) {
                 navigateToAtlasIndex(nextIndex);
@@ -651,7 +658,6 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.currentAge.textContent = entry.age;
             dom.rightPanel.classList.remove('collapsed');
             
-            // Check if there's a previous/next entry for the same gender
             const hasPrev = atlasIndex.slice(0, entryIndex).some(e => e.gender === entry.gender);
             const hasNext = atlasIndex.slice(entryIndex + 1).some(e => e.gender === entry.gender);
             dom.prevAgeBtn.disabled = !hasPrev;
@@ -660,10 +666,9 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.nextPageOverlay.classList.remove('hidden');
 
         } else {
-            // It's a non-atlas page (like the title page)
             state.currentAtlasEntryIndex = -1;
             dom.currentGender.textContent = '-';
-            dom.currentAge.textContent = 'Title Page';
+            dom.currentAge.textContent = 'Introductory Page';
             dom.prevAgeBtn.disabled = true;
             dom.nextAgeBtn.disabled = true;
             dom.prevPageOverlay.classList.add('hidden');
@@ -676,6 +681,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateCalculations() {
         const dob = dom.dobInput.value;
         const studyDate = dom.studyDateInput.value;
+        
+        let shouldJumpToPage = state.isPatientDataEntered === false && dob && studyDate;
 
         if (!dob || !studyDate) {
             state.isPatientDataEntered = false;
@@ -697,10 +704,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const sd = findClosestSd(age.totalMonths, state.patientGender);
             dom.sdOutput.textContent = sd ? `± ${sd} months` : 'N/A';
             
-            // Navigate to the closest standard
-            const closestIndex = findClosestAtlasIndex(age.totalMonths, state.patientGender);
-            if(closestIndex !== -1) {
-                navigateToAtlasIndex(closestIndex);
+            if (shouldJumpToPage) {
+                const closestIndex = findClosestAtlasIndex(age.totalMonths, state.patientGender);
+                if(closestIndex !== -1) {
+                    navigateToAtlasIndex(closestIndex);
+                }
             }
         }
     }
@@ -708,31 +716,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- EVENT LISTENERS ---
 
-    // Panel Toggles
     dom.topPanelToggle.addEventListener('click', () => dom.topPanel.classList.toggle('collapsed'));
     dom.rightPanelToggle.addEventListener('click', () => dom.rightPanel.classList.toggle('collapsed'));
 
-    // Top Panel Inputs
     dom.genderToggle.addEventListener('click', () => {
         state.patientGender = (state.patientGender === 'Male') ? 'Female' : 'Male';
         dom.genderToggle.textContent = state.patientGender;
         dom.genderToggle.className = (state.patientGender === 'Male') ? 'male' : 'female';
         updateCalculations();
+        // If data is already entered, find new closest page
+        if (state.isPatientDataEntered) {
+            const age = calculateChronologicalAge(dom.dobInput.value, dom.studyDateInput.value);
+            if (age) {
+                 const closestIndex = findClosestAtlasIndex(age.totalMonths, state.patientGender);
+                 if(closestIndex !== -1) navigateToAtlasIndex(closestIndex);
+            }
+        }
     });
     dom.dobInput.addEventListener('change', updateCalculations);
     dom.studyDateInput.addEventListener('change', updateCalculations);
 
-    // Reset Button
     dom.resetButton.addEventListener('click', () => {
         dom.dobInput.value = '';
         setDefaultStudyDate();
         state.patientGender = 'Male';
         dom.genderToggle.textContent = 'Male';
         dom.genderToggle.className = 'male';
+        dom.annotatedToggle.checked = false;
+        state.isAnnotated = false;
+        state.zoom = 1.0;
         updateCalculations();
     });
 
-    // Right Panel Controls
     dom.annotatedToggle.addEventListener('change', (e) => {
         state.isAnnotated = e.target.checked;
         if (state.currentAtlasEntryIndex !== -1) {
@@ -745,7 +760,6 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.prevPageOverlay.addEventListener('click', () => changeAge(-1));
     dom.nextPageOverlay.addEventListener('click', () => changeAge(1));
     
-    // Zoom Controls
     function handleZoom(factor) {
         state.zoom = Math.max(0.2, Math.min(5, state.zoom * factor));
         renderPage(state.currentPageNum);
@@ -753,12 +767,10 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.zoomInBtn.addEventListener('click', () => handleZoom(1.2));
     dom.zoomOutBtn.addEventListener('click', () => handleZoom(0.8));
 
-    // Pan and Zoom with Mouse
     dom.pdfViewer.addEventListener('wheel', e => {
         e.preventDefault();
         handleZoom(e.deltaY < 0 ? 1.1 : 0.9);
     });
-
     dom.pdfViewer.addEventListener('mousedown', e => {
         e.preventDefault();
         state.isPanning = true;
@@ -779,31 +791,18 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.mainContent.scrollTop = state.panStart.y - y;
     });
 
-    // Keyboard Shortcuts
     window.addEventListener('keydown', e => {
-        if (document.activeElement.tagName === 'INPUT') return; // Don't interfere with date typing
-        if (state.currentAtlasEntryIndex === -1) return;
-
+        if (document.activeElement.tagName === 'INPUT') return; 
+        if (!state.isPatientDataEntered) return;
         switch(e.key) {
-            case 'ArrowLeft':
-                changeAge(-1);
-                break;
-            case 'ArrowRight':
-                changeAge(1);
-                break;
-            case '+':
-            case '=':
-                handleZoom(1.2);
-                break;
-            case '-':
-                handleZoom(0.8);
-                break;
+            case 'ArrowLeft': changeAge(-1); break;
+            case 'ArrowRight': changeAge(1); break;
+            case '+': case '=': handleZoom(1.2); break;
+            case '-': handleZoom(0.8); break;
         }
     });
 
-
     // --- INITIALIZATION ---
-    
     function setDefaultStudyDate() {
         const today = new Date();
         const yyyy = today.getFullYear();
@@ -814,21 +813,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function initializeApp() {
         setDefaultStudyDate();
-
         try {
-            state.pdfDoc = await pdfjsLib.getDocument(PDF_PATH).promise;
+            const loadingTask = pdfjsLib.getDocument(PDF_PATH);
+            state.pdfDoc = await loadingTask.promise;
             dom.loader.style.display = 'none';
             dom.initialMessage.style.display = 'block';
-            renderPage(1); // Render title page initially
+            renderPage(1); // Render physical page 1 (cover) initially
         } catch (error) {
             dom.loader.textContent = 'Error: Could not load bone-age-atlas.pdf. Make sure it is in the same folder as this HTML file.';
             console.error(error);
         }
     }
-
     initializeApp();
 });
-
 </script>
 </body>
 </html>
