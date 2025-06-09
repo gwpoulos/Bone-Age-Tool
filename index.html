@@ -13,7 +13,6 @@
     </script>
 
     <style>
-        /* CSS for the entire application (unchanged) */
         :root {
             --primary-bg: #2c3e50;
             --secondary-bg: #34495e;
@@ -39,24 +38,27 @@
         #top-panel-content { display: flex; justify-content: space-around; align-items: center; padding: 15px 20px; gap: 20px; flex-wrap: wrap; }
         .input-group, .output-group { display: flex; flex-direction: column; gap: 5px; }
         .input-group label, .output-group .label { font-weight: 600; font-size: 0.9em; color: #555; }
-        .input-group input, .input-group button { padding: 8px 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; outline-color: var(--accent-color); }
+        /* CHANGE 3: Added font-family: inherit to better normalize input fields */
+        .input-group input, .input-group button { padding: 8px 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; font-family: inherit; outline-color: var(--accent-color); }
         .output-group .value { font-size: 1.1em; font-weight: bold; color: var(--primary-bg); min-height: 20px; }
         #gender-toggle { padding: 8px 20px; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; transition: background-color 0.3s; border: none; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
         #gender-toggle.male { background-color: var(--male-color); }
         #gender-toggle.female { background-color: var(--female-color); }
         #reset-button { background-color: #e74c3c; color: white; }
         #reset-button:hover { background-color: #c0392b; }
-        #main-content { grid-row: 2; grid-column: 1; background-color: var(--secondary-bg); overflow: auto; position: relative; display: flex; justify-content: center; align-items: center; }
-        #pdf-viewer { position: relative; cursor: grab; }
+        /* CHANGE 1: Removed flex properties to fix scrolling/panning at high zoom */
+        #main-content { grid-row: 2; grid-column: 1; background-color: var(--secondary-bg); overflow: auto; position: relative; }
+        #pdf-viewer { position: relative; cursor: grab; width: fit-content; margin: 20px auto; /* Provides some padding */ }
         #pdf-viewer.grabbing { cursor: grabbing; }
         #pdf-canvas { display: block; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        #right-panel { grid-row: 2; grid-column: 2; background-color: var(--panel-bg); border-left: 2px solid var(--border-color); width: 280px; position: relative; transition: transform 0.3s ease-in-out; z-index: 50; overflow-y: auto; }
+        #initial-message { color: var(--light-text); text-align: center; max-width: 500px; padding: 20px; font-size: 1.2em; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        #right-panel { grid-row: 2; grid-column: 2; background-color: var(--panel-bg); border-left: 2px solid var(--border-color); width: 280px; position: relative; transition: transform 0.3s ease-in-out; z-index: 50; overflow-y: auto; display: flex; flex-direction: column; }
         #right-panel.collapsed { transform: translateX(calc(100% - 40px)); }
         #right-panel-toggle { position: absolute; top: 50%; left: -2px; transform: translate(-100%, -50%); background-color: var(--panel-bg); border: 2px solid var(--border-color); border-right: none; border-radius: 10px 0 0 10px; padding: 20px 5px; cursor: pointer; transition: background-color 0.2s; }
         #right-panel-toggle:hover { background-color: #e9ecef; }
         #right-panel-toggle .arrow { display: inline-block; transition: transform 0.3s; writing-mode: vertical-rl; font-weight: bold; }
         #right-panel.collapsed .arrow { transform: rotate(180deg); }
-        #right-panel-content { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+        #right-panel-content { padding: 20px; display: flex; flex-direction: column; gap: 20px; flex-grow: 1; }
         .nav-group { border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
         .nav-group:last-child { border-bottom: none; }
         .nav-group label { display: block; font-weight: 600; margin-bottom: 10px; }
@@ -70,13 +72,18 @@
         .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--accent-color); }
         input:checked + .slider:before { transform: translateX(22px); }
-        #loader { font-size: 1.5em; color: var(--light-text); }
-        #initial-message { color: var(--light-text); text-align: center; max-width: 500px; padding: 20px; font-size: 1.2em; }
+        #loader { font-size: 1.5em; color: var(--light-text); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
         .page-overlay-nav { position: absolute; top: 0; bottom: 0; width: 15%; display: flex; align-items: center; justify-content: center; font-size: 4em; color: rgba(255, 255, 255, 0.3); cursor: pointer; user-select: none; transition: color 0.2s, background-color 0.2s; z-index: 20; }
         .page-overlay-nav:hover { color: rgba(255, 255, 255, 0.8); background-color: rgba(0,0,0,0.2); }
         .page-overlay-nav.hidden { display: none; }
         #prev-page-overlay { left: 0; }
         #next-page-overlay { right: 0; }
+        /* CHANGE 4: Style for new data button */
+        .data-button {
+            width: 100%; padding: 10px; font-weight: bold; cursor: pointer; transition: background-color 0.3s; border-radius: 5px; color: white; border: none; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); margin-top: auto; /* Pushes to bottom */
+        }
+        .data-button.male { background-color: var(--male-color); }
+        .data-button.female { background-color: var(--female-color); }
     </style>
 </head>
 <body>
@@ -116,16 +123,16 @@
         <!-- MAIN PDF VIEWING AREA -->
         <main id="main-content">
             <div id="loader">Loading PDF Atlas...</div>
-            <!-- CHANGE 2 & 3: Updated initial message -->
             <div id="initial-message">
                 <h2>Welcome to the Bone Age Tool</h2>
                 <p style="font-style: italic; margin-top: -10px; margin-bottom: 25px;">by George W. Poulos, MD, PhD</p>
                 <p>Please enter the patient's gender and date of birth in the panel above to begin.</p>
+                <!-- CHANGE 2: Updated caveat text -->
                 <p style="font-size: 0.9em; color: #ccc; margin-top: 20px; line-height: 1.4;">
-                    <strong>Please note:</strong> This tool does not directly calculate the patient's bone age. Rather, it is a helpful tool for the radiologist to determine bone age.
+                    <strong>Please note:</strong> This tool does not directly calculate the patient's bone age. Rather, it is a helpful starting tool for the radiologist.
                 </p>
                  <p style="font-size: 0.9em; color: #ccc; margin-top: 20px; line-height: 1.4;">
-                    Please let me know if you have any further suggestions for this tool.
+                    Please let me know if you have any further comments or suggestions for this tool. (georgewpoulos@hotmail.com)
                 </p>
             </div>
             <div id="pdf-viewer">
@@ -168,6 +175,10 @@
                         <button id="zoom-in">+</button>
                     </div>
                 </div>
+            </div>
+             <!-- CHANGE 4: Added "Show Brush Data" button -->
+            <div style="padding: 0 20px 20px 20px;">
+                 <button id="show-data-btn" class="data-button male">Show Brush Data</button>
             </div>
             <div id="right-panel-toggle"><span class="arrow">Navigation</span></div>
         </aside>
@@ -243,7 +254,7 @@ const standardDeviations = {
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM ELEMENT REFERENCES ---
     const dom = {
-        loader: document.getElementById('loader'), initialMessage: document.getElementById('initial-message'), pdfViewer: document.getElementById('pdf-viewer'), canvas: document.getElementById('pdf-canvas'), topPanel: document.getElementById('top-panel'), topPanelToggle: document.getElementById('top-panel-toggle'), rightPanel: document.getElementById('right-panel'), rightPanelToggle: document.getElementById('right-panel-toggle'), genderToggle: document.getElementById('gender-toggle'), dobInput: document.getElementById('dob-input'), studyDateInput: document.getElementById('study-date-input'), chronoAgeOutput: document.getElementById('chrono-age-output'), sdOutput: document.getElementById('sd-output'), resetButton: document.getElementById('reset-button'), annotatedToggle: document.getElementById('annotated-toggle'), currentGender: document.getElementById('current-gender'), currentAge: document.getElementById('current-age'), prevAgeBtn: document.getElementById('prev-age'), nextAgeBtn: document.getElementById('next-age'), zoomOutBtn: document.getElementById('zoom-out'), zoomInBtn: document.getElementById('zoom-in'), zoomLevel: document.getElementById('zoom-level'), prevPageOverlay: document.getElementById('prev-page-overlay'), nextPageOverlay: document.getElementById('next-page-overlay'), mainContent: document.getElementById('main-content')
+        loader: document.getElementById('loader'), initialMessage: document.getElementById('initial-message'), pdfViewer: document.getElementById('pdf-viewer'), canvas: document.getElementById('pdf-canvas'), topPanel: document.getElementById('top-panel'), topPanelToggle: document.getElementById('top-panel-toggle'), rightPanel: document.getElementById('right-panel'), rightPanelToggle: document.getElementById('right-panel-toggle'), genderToggle: document.getElementById('gender-toggle'), dobInput: document.getElementById('dob-input'), studyDateInput: document.getElementById('study-date-input'), chronoAgeOutput: document.getElementById('chrono-age-output'), sdOutput: document.getElementById('sd-output'), resetButton: document.getElementById('reset-button'), annotatedToggle: document.getElementById('annotated-toggle'), currentGender: document.getElementById('current-gender'), currentAge: document.getElementById('current-age'), prevAgeBtn: document.getElementById('prev-age'), nextAgeBtn: document.getElementById('next-age'), zoomOutBtn: document.getElementById('zoom-out'), zoomInBtn: document.getElementById('zoom-in'), zoomLevel: document.getElementById('zoom-level'), prevPageOverlay: document.getElementById('prev-page-overlay'), nextPageOverlay: document.getElementById('next-page-overlay'), mainContent: document.getElementById('main-content'), showDataBtn: document.getElementById('show-data-btn')
     };
     const ctx = dom.canvas.getContext('2d');
 
@@ -309,6 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!state.pdfDoc || pageNum < 1 || pageNum > state.pdfDoc.numPages) return;
         dom.loader.style.display = 'block';
         dom.pdfViewer.style.display = 'none';
+        dom.initialMessage.style.display = 'none';
         try {
             const page = await state.pdfDoc.getPage(pageNum);
             const viewport = page.getViewport({ scale: state.zoom });
@@ -367,7 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             state.currentAtlasEntryIndex = -1;
             dom.currentGender.textContent = '-';
-            dom.currentAge.textContent = 'Introductory Page';
+            dom.currentAge.textContent = 'Data Table';
             dom.prevAgeBtn.disabled = true;
             dom.nextAgeBtn.disabled = true;
             dom.prevPageOverlay.classList.add('hidden');
@@ -386,12 +398,9 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.pdfViewer.style.display = 'none';
             dom.chronoAgeOutput.textContent = '';
             dom.sdOutput.textContent = '';
-            if (state.currentPageNum !== 1) renderPage(1);
             return;
         }
         state.isPatientDataEntered = true;
-        dom.initialMessage.style.display = 'none';
-        dom.pdfViewer.style.display = 'block';
         const age = calculateChronologicalAge(dob, studyDate);
         if (age) {
             dom.chronoAgeOutput.textContent = `${age.years} years, ${age.months} months`;
@@ -412,7 +421,10 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.genderToggle.addEventListener('click', () => {
         state.patientGender = (state.patientGender === 'Male') ? 'Female' : 'Male';
         dom.genderToggle.textContent = state.patientGender;
-        dom.genderToggle.className = (state.patientGender === 'Male') ? 'male' : 'female';
+        const genderClass = state.patientGender.toLowerCase();
+        dom.genderToggle.className = genderClass;
+        dom.showDataBtn.classList.remove('male', 'female');
+        dom.showDataBtn.classList.add(genderClass);
         handlePatientDataUpdate();
     });
 
@@ -430,7 +442,10 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.studyDateInput.addEventListener('change', handlePatientDataUpdate);
     
     dom.resetButton.addEventListener('click', () => {
-        dom.dobInput.value = ''; setDefaultStudyDate(); state.patientGender = 'Male'; dom.genderToggle.textContent = 'Male'; dom.genderToggle.className = 'male'; dom.annotatedToggle.checked = false; state.isAnnotated = false; state.zoom = 1.0; state.isPatientDataEntered = false; handlePatientDataUpdate();
+        dom.dobInput.value = ''; setDefaultStudyDate(); state.patientGender = 'Male'; dom.genderToggle.textContent = 'Male'; dom.genderToggle.className = 'male'; dom.showDataBtn.classList.remove('female'); dom.showDataBtn.classList.add('male'); dom.annotatedToggle.checked = false; state.isAnnotated = false; state.zoom = 1.0; state.isPatientDataEntered = false; handlePatientDataUpdate();
+        dom.initialMessage.style.display = 'block';
+        dom.pdfViewer.style.display = 'none';
+        renderPage(1);
     });
 
     dom.annotatedToggle.addEventListener('change', (e) => {
@@ -443,6 +458,11 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.prevPageOverlay.addEventListener('click', () => changeAge(-1));
     dom.nextPageOverlay.addEventListener('click', () => changeAge(1));
     
+    dom.showDataBtn.addEventListener('click', () => {
+        const page = state.patientGender === 'Male' ? 21 : 22; // Physical page 21 (labeled 8) or 22 (labeled 9)
+        renderPage(page);
+    });
+    
     function handleZoom(factor) {
         state.zoom = Math.max(0.2, Math.min(5, state.zoom * factor));
         renderPage(state.currentPageNum);
@@ -450,18 +470,15 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.zoomInBtn.addEventListener('click', () => handleZoom(1.2));
     dom.zoomOutBtn.addEventListener('click', () => handleZoom(0.8));
 
-    dom.pdfViewer.addEventListener('wheel', e => { e.preventDefault(); handleZoom(e.deltaY < 0 ? 1.1 : 0.9); });
+    dom.mainContent.addEventListener('wheel', e => { e.preventDefault(); handleZoom(e.deltaY < 0 ? 1.1 : 0.9); });
 
-    // CHANGE 1: Corrected Panning Logic
     dom.mainContent.addEventListener('mousedown', e => {
-        if (e.target.id !== 'pdf-canvas') return; // Only pan if clicking on the canvas
+        if (e.target.id !== 'pdf-canvas') return;
         e.preventDefault();
         state.isPanning = true;
         state.panStart = {
-            scrollLeft: dom.mainContent.scrollLeft,
-            scrollTop: dom.mainContent.scrollTop,
-            x: e.clientX,
-            y: e.clientY,
+            scrollLeft: dom.mainContent.scrollLeft, scrollTop: dom.mainContent.scrollTop,
+            x: e.clientX, y: e.clientY,
         };
         dom.pdfViewer.classList.add('grabbing');
     });
@@ -509,7 +526,6 @@ document.addEventListener('DOMContentLoaded', () => {
             state.pdfDoc = await loadingTask.promise;
             dom.loader.style.display = 'none';
             dom.initialMessage.style.display = 'block';
-            renderPage(1);
         } catch (error) {
             dom.loader.textContent = 'Error: Could not load "bone-age-atlas.pdf". Make sure it is in the same folder as this HTML file.';
             console.error(error);
