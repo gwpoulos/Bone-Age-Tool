@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bone Age Tool</title>
+    
+    <!-- PDF.js library from a CDN for rendering the PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.min.js"></script>
+    <script>
+        // Specify the worker script location for PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.worker.min.js`;
+    </script>
+
+    <style>
+        /* CSS for the entire application */
+        :root {
+            --primary-bg: #2c3e50;
+            --secondary-bg: #34495e;
+            --panel-bg: #f8f9fa;
+            --text-color: #333;
+            --light-text: #ecf0f1;
+            --border-color: #dee2e6;
+            --male-color: #3498db;
+            --female-color: #e91e63;
+            --accent-color: #1abc9c;
+            --shadow-color: rgba(0, 0, 0, 0.2);
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--primary-bg);
+            overflow: hidden;
+            color: var(--text-color);
+        }
+
+        #app-container {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            grid-template-columns: 1fr auto;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* --- Top Panel --- */
+        #top-panel {
+            grid-column: 1 / -1; /* Span all columns */
+            background-color: var(--panel-bg);
+            border-bottom: 2px solid var(--border-color);
+            position: relative;
+            z-index: 100;
+            transition: transform 0.3s ease-in-out;
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        #top-panel.collapsed {
+            transform: translateY(calc(-100% + 40px));
+        }
+        #top-panel-toggle {
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translate(-50%, 100%);
+            background-color: var(--panel-bg);
+            border: 2px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            padding: 5px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        #top-panel-toggle:hover { background-color: #e9ecef; }
+        #top-panel-toggle .arrow {
+            display: inline-block;
+            transition: transform 0.3s;
+        }
+        #top-panel.collapsed .arrow { transform: rotate(180deg); }
+
+        #top-panel-content {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 15px 20px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .input-group, .output-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .input-group label, .output-group .label {
+            font-weight: 600;
+            font-size: 0.9em;
+            color: #555;
+        }
+        .input-group input[type="date"], .input-group button {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+            outline-color: var(--accent-color);
+        }
+        .output-group .value {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: var(--primary-bg);
+            min-height: 20px;
+        }
+
+        #gender-toggle {
+            padding: 8px 20px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            border: none;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        #gender-toggle.male { background-color: var(--male-color); }
+        #gender-toggle.female { background-color: var(--female-color); }
+
+        #reset-button {
+            background-color: #e74c3c;
+            color: white;
+        }
+        #reset-button:hover { background-color: #c0392b; }
+
+        /* --- Main Content (PDF Viewer) --- */
+        #main-content {
+            grid-row: 2;
+            grid-column: 1;
+            background-color: var(--secondary-bg);
+            overflow: auto; /* This enables panning */
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #pdf-viewer {
+            position: relative;
+            cursor: grab;
+        }
+        #pdf-viewer.grabbing { cursor: grabbing; }
+        #pdf-canvas {
+            display: block;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* --- Right Panel --- */
+        #right-panel {
+            grid-row: 2;
+            grid-column: 2;
+            background-color: var(--panel-bg);
+            border-left: 2px solid var(--border-color);
+            width: 280px;
+            position: relative;
+            transition: transform 0.3s ease-in-out;
+            z-index: 50;
+            overflow-y: auto;
+        }
+        #right-panel.collapsed {
+            transform: translateX(calc(100% - 40px));
+        }
+        #right-panel-toggle {
+            position: absolute;
+            top: 50%;
+            left: -2px;
+            transform: translate(-100%, -50%);
+            background-color: var(--panel-bg);
+            border: 2px solid var(--border-color);
+            border-right: none;
+            border-radius: 10px 0 0 10px;
+            padding: 20px 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #right-panel-toggle:hover { background-color: #e9ecef; }
+        #right-panel-toggle .arrow {
+            display: inline-block;
+            transition: transform 0.3s;
+            writing-mode: vertical-rl;
+            font-weight: bold;
+        }
+        #right-panel.collapsed .arrow { transform: rotate(180deg); }
+
+        #right-panel-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .nav-group {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+        .nav-group:last-child { border-bottom: none; }
+        .nav-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .control-row button {
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 5px 12px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            background-color: #f1f1f1;
+        }
+        .control-row button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .control-row span {
+            font-size: 1.1em;
+            font-weight: 500;
+            text-align: center;
+            flex-grow: 1;
+        }
+        /* Simple checkbox toggle switch */
+        .switch {
+          position: relative;
+          display: inline-block;
+          width: 50px;
+          height: 28px;
+        }
+        .switch input { display: none; }
+        .slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background-color: #ccc;
+          transition: .4s;
+          border-radius: 28px;
+        }
+        .slider:before {
+          position: absolute;
+          content: "";
+          height: 20px; width: 20px;
+          left: 4px; bottom: 4px;
+          background-color: white;
+          transition: .4s;
+          border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent-color); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+
+        /* --- Overlays and Loaders --- */
+        #loader {
+            font-size: 1.5em;
+            color: var(--light-text);
+        }
+        #initial-message {
+            color: var(--light-text);
+            text-align: center;
+            max-width: 500px;
+            padding: 20px;
+            font-size: 1.2em;
+        }
+        .page-overlay-nav {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 15%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4em;
+            color: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s, background-color 0.2s;
+            z-index: 20;
+        }
+        .page-overlay-nav:hover {
+            color: rgba(255, 255, 255, 0.8);
+            background-color: rgba(0,0,0,0.2);
+        }
+        .page-overlay-nav.hidden { display: none; }
+        #prev-page-overlay { left: 0; }
+        #next-page-overlay { right: 0; }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <!-- TOP COLLAPSIBLE PANEL -->
+        <div id="top-panel">
+            <div id="top-panel-content">
+                <div class="input-group">
+                    <label for="gender-toggle">Patient Gender</label>
+                    <button id="gender-toggle" class="male">Male</button>
+                </div>
+                <div class="input-group">
+                    <label for="dob-input">Date of Birth</label>
+                    <input type="date" id="dob-input">
+                </div>
+                <div class="input-group">
+                    <label for="study-date-input">Date of Study</label>
+                    <input type="date" id="study-date-input">
+                </div>
+                <div class="output-group">
+                    <span class="label">Chronologic Age:</span>
+                    <span id="chrono-age-output" class="value"></span>
+                </div>
+                <div class="output-group">
+                    <span class="label">Standard Deviation (± months):</span>
+                    <span id="sd-output" class="value"></span>
+                </div>
+                <div class="input-group">
+                    <label>Actions</label>
+                    <button id="reset-button">Reset</button>
+                </div>
+            </div>
+            <div id="top-panel-toggle"><span class="arrow">▲</span></div>
+        </div>
+
+        <!-- MAIN PDF VIEWING AREA -->
+        <main id="main-content">
+            <div id="loader">Loading PDF Atlas...</div>
+            <div id="initial-message">
+                <h2>Welcome to the Bone Age Tool</h2>
+                <p>Please enter the patient's gender and date of birth in the panel above to begin.</p>
+            </div>
+            <div id="pdf-viewer">
+                <canvas id="pdf-canvas"></canvas>
+            </div>
+            <div id="prev-page-overlay" class="page-overlay-nav hidden">‹</div>
+            <div id="next-page-overlay" class="page-overlay-nav hidden">›</div>
+        </main>
+
+        <!-- RIGHT COLLAPSIBLE PANEL -->
+        <aside id="right-panel" class="collapsed">
+            <div id="right-panel-content">
+                <div class="nav-group">
+                    <label>View Options</label>
+                    <div class="control-row">
+                        <span>Annotated X-Ray</span>
+                        <label class="switch">
+                            <input type="checkbox" id="annotated-toggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="nav-group">
+                    <label>Current Standard</label>
+                    <div class="control-row" style="margin-bottom: 10px;">
+                        <span>Gender:</span>
+                        <span id="current-gender">-</span>
+                    </div>
+                    <div class="control-row">
+                        <button id="prev-age">-</button>
+                        <span id="current-age">-</span>
+                        <button id="next-age">+</button>
+                    </div>
+                </div>
+                <div class="nav-group">
+                    <label>Zoom</label>
+                    <div class="control-row">
+                        <button id="zoom-out">-</button>
+                        <span id="zoom-level">100%</span>
+                        <button id="zoom-in">+</button>
+                    </div>
+                </div>
+            </div>
+            <div id="right-panel-toggle"><span class="arrow">Navigation</span></div>
+        </aside>
+    </div>
+
+<script>
+// --- DATA (Embedded from your PDF analysis) ---
+
+// ** CORRECTED and VERIFIED Atlas Index Data **
+const atlasIndex = [
+  { "gender": "Male", "age": "Newborn (term)", "ageInMonths": 0, "pageAnnotated": 27, "pageUnannotated": 28 },
+  { "gender": "Male", "age": "3 Months", "ageInMonths": 3, "pageAnnotated": 29, "pageUnannotated": 30 },
+  { "gender": "Male", "age": "6 Months", "ageInMonths": 6, "pageAnnotated": 31, "pageUnannotated": 32 },
+  { "gender": "Male", "age": "9 Months", "ageInMonths": 9, "pageAnnotated": 33, "pageUnannotated": 34 },
+  { "gender": "Male", "age": "1 Year", "ageInMonths": 12, "pageAnnotated": 35, "pageUnannotated": 36 },
+  { "gender": "Male", "age": "1 Year and 3 Months", "ageInMonths": 15, "pageAnnotated": 37, "pageUnannotated": 38 },
+  { "gender": "Male", "age": "1 Year and 6 Months", "ageInMonths": 18, "pageAnnotated": 39, "pageUnannotated": 40 },
+  { "gender": "Male", "age": "2 Years", "ageInMonths": 24, "pageAnnotated": 41, "pageUnannotated": 42 },
+  { "gender": "Male", "age": "2 Years and 8 Months", "ageInMonths": 32, "pageAnnotated": 43, "pageUnannotated": 44 },
+  { "gender": "Male", "age": "3 Years", "ageInMonths": 36, "pageAnnotated": 45, "pageUnannotated": 46 },
+  { "gender": "Male", "age": "3 Years and 6 Months", "ageInMonths": 42, "pageAnnotated": 47, "pageUnannotated": 48 },
+  { "gender": "Male", "age": "4 Years", "ageInMonths": 48, "pageAnnotated": 49, "pageUnannotated": 50 },
+  { "gender": "Male", "age": "4 Years and 6 Months", "ageInMonths": 54, "pageAnnotated": 51, "pageUnannotated": 52 },
+  { "gender": "Male", "age": "5 Years", "ageInMonths": 60, "pageAnnotated": 53, "pageUnannotated": 54 },
+  { "gender": "Male", "age": "6 Years", "ageInMonths": 72, "pageAnnotated": 55, "pageUnannotated": 56 },
+  { "gender": "Male", "age": "7 Years", "ageInMonths": 84, "pageAnnotated": 57, "pageUnannotated": 58 },
+  { "gender": "Male", "age": "8 Years", "ageInMonths": 96, "pageAnnotated": 59, "pageUnannotated": 60 },
+  { "gender": "Male", "age": "9 Years", "ageInMonths": 108, "pageAnnotated": 61, "pageUnannotated": 62 },
+  { "gender": "Male", "age": "10 Years", "ageInMonths": 120, "pageAnnotated": 63, "pageUnannotated": 64 },
+  { "gender": "Male", "age": "11 Years", "ageInMonths": 132, "pageAnnotated": 65, "pageUnannotated": 66 },
+  { "gender": "Male", "age": "11 Years and 6 Months", "ageInMonths": 138, "pageAnnotated": 67, "pageUnannotated": 68 },
+  { "gender": "Male", "age": "12 Years and 6 Months", "ageInMonths": 150, "pageAnnotated": 69, "pageUnannotated": 70 },
+  { "gender": "Male", "age": "13 Years", "ageInMonths": 156, "pageAnnotated": 71, "pageUnannotated": 72 },
+  { "gender": "Male", "age": "13 Years and 6 Months", "ageInMonths": 162, "pageAnnotated": 73, "pageUnannotated": 74 },
+  { "gender": "Male", "age": "14 Years", "ageInMonths": 168, "pageAnnotated": 75, "pageUnannotated": 76 },
+  { "gender": "Male", "age": "15 Years", "ageInMonths": 180, "pageAnnotated": 77, "pageUnannotated": 78 },
+  { "gender": "Male", "age": "15 Years and 6 Months", "ageInMonths": 186, "pageAnnotated": 79, "pageUnannotated": 80 },
+  { "gender": "Male", "age": "16 Years", "ageInMonths": 192, "pageAnnotated": 81, "pageUnannotated": 82 },
+  { "gender": "Male", "age": "17 Years", "ageInMonths": 204, "pageAnnotated": 83, "pageUnannotated": 84 },
+  { "gender": "Male", "age": "18 Years", "ageInMonths": 216, "pageAnnotated": 85, "pageUnannotated": 86 },
+  { "gender": "Male", "age": "19 Years", "ageInMonths": 228, "pageAnnotated": 87, "pageUnannotated": 88 },
+  { "gender": "Female", "age": "Newborn (term)", "ageInMonths": 0, "pageAnnotated": 91, "pageUnannotated": 92 },
+  { "gender": "Female", "age": "3 Months", "ageInMonths": 3, "pageAnnotated": 93, "pageUnannotated": 94 },
+  { "gender": "Female", "age": "6 Months", "ageInMonths": 6, "pageAnnotated": 95, "pageUnannotated": 96 },
+  { "gender": "Female", "age": "9 Months", "ageInMonths": 9, "pageAnnotated": 97, "pageUnannotated": 98 },
+  { "gender": "Female", "age": "1 Year", "ageInMonths": 12, "pageAnnotated": 99, "pageUnannotated": 100 },
+  { "gender": "Female", "age": "1 Year and 3 Months", "ageInMonths": 15, "pageAnnotated": 101, "pageUnannotated": 102 },
+  { "gender": "Female", "age": "1 Year and 6 Months", "ageInMonths": 18, "pageAnnotated": 103, "pageUnannotated": 104 },
+  { "gender": "Female", "age": "2 Years", "ageInMonths": 24, "pageAnnotated": 105, "pageUnannotated": 106 },
+  { "gender": "Female", "age": "2 Years and 6 Months", "ageInMonths": 30, "pageAnnotated": 107, "pageUnannotated": 108 },
+  { "gender": "Female", "age": "3 Years", "ageInMonths": 36, "pageAnnotated": 109, "pageUnannotated": 110 },
+  { "gender": "Female", "age": "3 Years and 6 Months", "ageInMonths": 42, "pageAnnotated": 111, "pageUnannotated": 112 },
+  { "gender": "Female", "age": "4 Years and 2 Months", "ageInMonths": 50, "pageAnnotated": 113, "pageUnannotated": 114 },
+  { "gender": "Female", "age": "5 Years", "ageInMonths": 60, "pageAnnotated": 115, "pageUnannotated": 116 },
+  { "gender": "Female", "age": "5 Years and 9 Months", "ageInMonths": 69, "pageAnnotated": 117, "pageUnannotated": 118 },
+  { "gender": "Female", "age": "6 Years and 10 Months", "ageInMonths": 82, "pageAnnotated": 119, "pageUnannotated": 120 },
+  { "gender": "Female", "age": "7 Years and 10 Months", "ageInMonths": 94, "pageAnnotated": 121, "pageUnannotated": 122 },
+  { "gender": "Female", "age": "8 Years and 10 Months", "ageInMonths": 106, "pageAnnotated": 123, "pageUnannotated": 124 },
+  { "gender": "Female", "age": "10 Years", "ageInMonths": 120, "pageAnnotated": 125, "pageUnannotated": 126 },
+  { "gender": "Female", "age": "11 Years", "ageInMonths": 132, "pageAnnotated": 127, "pageUnannotated": 128 },
+  { "gender": "Female", "age": "12 Years", "ageInMonths": 144, "pageAnnotated": 129, "pageUnannotated": 130 },
+  { "gender": "Female", "age": "13 Years", "ageInMonths": 156, "pageAnnotated": 131, "pageUnannotated": 132 },
+  { "gender": "Female", "age": "13 Years and 6 Months", "ageInMonths": 162, "pageAnnotated": 133, "pageUnannotated": 134 },
+  { "gender": "Female", "age": "14 Years", "ageInMonths": 168, "pageAnnotated": 135, "pageUnannotated": 136 },
+  { "gender": "Female", "age": "15 Years", "ageInMonths": 180, "pageAnnotated": 137, "pageUnannotated": 138 },
+  { "gender": "Female", "age": "16 Years", "ageInMonths": 192, "pageAnnotated": 139, "pageUnannotated": 140 },
+  { "gender": "Female", "age": "17 Years", "ageInMonths": 204, "pageAnnotated": 141, "pageUnannotated": 142 },
+  { "gender": "Female", "age": "18 Years", "ageInMonths": 216, "pageAnnotated": 143, "pageUnannotated": 144 }
+];
+
+const standardDeviations = {
+  // Converted ages to total months for easier lookup
+  boys: [
+    { chronologicalMonths: 3, sdMonths: 0.69 }, { chronologicalMonths: 6, sdMonths: 1.13 },
+    { chronologicalMonths: 9, sdMonths: 1.43 }, { chronologicalMonths: 12, sdMonths: 1.97 },
+    { chronologicalMonths: 18, sdMonths: 3.52 }, { chronologicalMonths: 24, sdMonths: 3.92 },
+    { chronologicalMonths: 30, sdMonths: 4.52 }, { chronologicalMonths: 36, sdMonths: 5.08 },
+    { chronologicalMonths: 42, sdMonths: 5.40 }, { chronologicalMonths: 48, sdMonths: 6.66 },
+    { chronologicalMonths: 54, sdMonths: 8.36 }, { chronologicalMonths: 60, sdMonths: 8.79 },
+    { chronologicalMonths: 72, sdMonths: 9.17 }, { chronologicalMonths: 84, sdMonths: 8.91 },
+    { chronologicalMonths: 96, sdMonths: 9.10 }, { chronologicalMonths: 108, sdMonths: 9.00 },
+    { chronologicalMonths: 120, sdMonths: 9.79 }, { chronologicalMonths: 132, sdMonths: 10.09 },
+    { chronologicalMonths: 144, sdMonths: 10.38 }, { chronologicalMonths: 156, sdMonths: 10.44 },
+    { chronologicalMonths: 168, sdMonths: 10.72 }, { chronologicalMonths: 180, sdMonths: 11.32 },
+    { chronologicalMonths: 192, sdMonths: 12.86 }, { chronologicalMonths: 204, sdMonths: 13.05 }
+  ],
+  girls: [
+    { chronologicalMonths: 3, sdMonths: 0.72 }, { chronologicalMonths: 6, sdMonths: 1.16 },
+    { chronologicalMonths: 9, sdMonths: 1.36 }, { chronologicalMonths: 12, sdMonths: 1.77 },
+    { chronologicalMonths: 18, sdMonths: 3.49 }, { chronologicalMonths: 24, sdMonths: 4.64 },
+    { chronologicalMonths: 30, sdMonths: 5.37 }, { chronologicalMonths: 36, sdMonths: 5.97 },
+    { chronologicalMonths: 42, sdMonths: 7.48 }, { chronologicalMonths: 48, sdMonths: 8.98 },
+    { chronologicalMonths: 54, sdMonths: 10.73 }, { chronologicalMonths: 60, sdMonths: 11.65 },
+    { chronologicalMonths: 72, sdMonths: 10.23 }, { chronologicalMonths: 84, sdMonths: 9.64 },
+    { chronologicalMonths: 96, sdMonths: 10.23 }, { chronologicalMonths: 108, sdMonths: 10.74 },
+    { chronologicalMonths: 120, sdMonths: 11.73 }, { chronologicalMonths: 132, sdMonths: 11.94 },
+    { chronologicalMonths: 144, sdMonths: 10.24 }, { chronologicalMonths: 156, sdMonths: 10.67 },
+    { chronologicalMonths: 168, sdMonths: 11.30 }, { chronologicalMonths: 180, sdMonths: 9.23 },
+    { chronologicalMonths: 192, sdMonths: 7.31 }
+  ]
+};
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    // --- DOM ELEMENT REFERENCES ---
+    const dom = {
+        loader: document.getElementById('loader'),
+        initialMessage: document.getElementById('initial-message'),
+        pdfViewer: document.getElementById('pdf-viewer'),
+        canvas: document.getElementById('pdf-canvas'),
+        topPanel: document.getElementById('top-panel'),
+        topPanelToggle: document.getElementById('top-panel-toggle'),
+        rightPanel: document.getElementById('right-panel'),
+        rightPanelToggle: document.getElementById('right-panel-toggle'),
+        genderToggle: document.getElementById('gender-toggle'),
+        dobInput: document.getElementById('dob-input'),
+        studyDateInput: document.getElementById('study-date-input'),
+        chronoAgeOutput: document.getElementById('chrono-age-output'),
+        sdOutput: document.getElementById('sd-output'),
+        resetButton: document.getElementById('reset-button'),
+        annotatedToggle: document.getElementById('annotated-toggle'),
+        currentGender: document.getElementById('current-gender'),
+        currentAge: document.getElementById('current-age'),
+        prevAgeBtn: document.getElementById('prev-age'),
+        nextAgeBtn: document.getElementById('next-age'),
+        zoomOutBtn: document.getElementById('zoom-out'),
+        zoomInBtn: document.getElementById('zoom-in'),
+        zoomLevel: document.getElementById('zoom-level'),
+        prevPageOverlay: document.getElementById('prev-page-overlay'),
+        nextPageOverlay: document.getElementById('next-page-overlay'),
+    };
+    const ctx = dom.canvas.getContext('2d');
+
+    // --- APPLICATION STATE ---
+    let state = {
+        pdfDoc: null,
+        currentPageNum: 1, // Start with the physical page 1 (cover)
+        currentAtlasEntryIndex: -1,
+        zoom: 1.0,
+        isAnnotated: false,
+        patientGender: 'Male',
+        isPanning: false,
+        panStart: { x: 0, y: 0 },
+        isPatientDataEntered: false
+    };
+
+    const PDF_PATH = 'bone-age-atlas.pdf';
+
+    // --- HELPER FUNCTIONS ---
+    
+    function calculateChronologicalAge(dob, studyDate) {
+        if (!dob || !studyDate) return null;
+        
+        let d1 = new Date(dob);
+        let d2 = new Date(studyDate);
+        if (d1.getTime() > d2.getTime()) return { years: 0, months: 0, totalMonths: 0 };
+        
+        // Use UTC to avoid timezone issues with date calculations
+        let d1_utc = new Date(Date.UTC(d1.getUTCFullYear(), d1.getUTCMonth(), d1.getUTCDate()));
+        let d2_utc = new Date(Date.UTC(d2.getUTCFullYear(), d2.getUTCMonth(), d2.getUTCDate()));
+        
+        let years = d2_utc.getUTCFullYear() - d1_utc.getUTCFullYear();
+        let months = d2_utc.getUTCMonth() - d1_utc.getUTCMonth();
+        
+        if (d2_utc.getUTCDate() < d1_utc.getUTCDate()) {
+            months--;
+        }
+        
+        if (months < 0) {
+            years--;
+            months += 12;
+        }
+
+        // Round to the nearest month based on days
+        let dayDiff = d2_utc.getUTCDate() - d1_utc.getUTCDate();
+        if (dayDiff < 0) {
+            let daysInPrevMonth = new Date(d2_utc.getUTCFullYear(), d2_utc.getUTCMonth(), 0).getDate();
+            dayDiff += daysInPrevMonth;
+        }
+
+        if (dayDiff >= 15) {
+             months++;
+             if (months === 12) {
+                 months = 0;
+                 years++;
+             }
+        }
+        
+        return { years, months, totalMonths: (years * 12) + months };
+    }
+
+    function findClosestSd(totalMonths, gender) {
+        const data = (gender === 'Male') ? standardDeviations.boys : standardDeviations.girls;
+        if (!data || data.length === 0) return null;
+
+        let closest = data.reduce((prev, curr) => {
+            return (Math.abs(curr.chronologicalMonths - totalMonths) < Math.abs(prev.chronologicalMonths - totalMonths) ? curr : prev);
+        });
+        return closest.sdMonths;
+    }
+    
+    function findClosestAtlasIndex(totalMonths, gender) {
+        const genderSpecificAtlas = atlasIndex.map((entry, index) => ({...entry, originalIndex: index}))
+                                               .filter(entry => entry.gender === gender);
+        if (genderSpecificAtlas.length === 0) return -1;
+        
+        const closestEntry = genderSpecificAtlas.reduce((prev, curr) => {
+            return (Math.abs(curr.ageInMonths - totalMonths) < Math.abs(prev.ageInMonths - totalMonths) ? curr : prev);
+        });
+
+        return closestEntry.originalIndex;
+    }
+
+
+    // --- RENDERING AND NAVIGATION ---
+
+    async function renderPage(pageNum) {
+        if (!state.pdfDoc || pageNum < 1 || pageNum > state.pdfDoc.numPages) return;
+        dom.loader.style.display = 'block';
+        dom.pdfViewer.style.display = 'none';
+
+        try {
+            const page = await state.pdfDoc.getPage(pageNum);
+            const viewport = page.getViewport({ scale: state.zoom });
+
+            dom.canvas.height = viewport.height;
+            dom.canvas.width = viewport.width;
+
+            const renderContext = {
+                canvasContext: ctx,
+                viewport: viewport
+            };
+            await page.render(renderContext).promise;
+
+            state.currentPageNum = pageNum;
+            updateUiForCurrentPage();
+            
+        } catch (error) {
+            console.error('Error rendering page:', error);
+            dom.loader.textContent = 'Error loading page.';
+        } finally {
+            dom.loader.style.display = 'none';
+            dom.pdfViewer.style.display = 'block';
+        }
+    }
+    
+    function navigateToAtlasIndex(index) {
+        if (index < 0 || index >= atlasIndex.length) return;
+
+        state.currentAtlasEntryIndex = index;
+        const entry = atlasIndex[index];
+        const pageToRender = state.isAnnotated ? entry.pageAnnotated : entry.pageUnannotated;
+        
+        if(state.currentPageNum !== pageToRender) {
+            renderPage(pageToRender);
+        } else {
+             updateUiForCurrentPage();
+        }
+    }
+
+    function changeAge(direction) {
+        if (state.currentAtlasEntryIndex === -1) return;
+        const currentGender = atlasIndex[state.currentAtlasEntryIndex].gender;
+        let nextIndex = state.currentAtlasEntryIndex + direction;
+
+        while (nextIndex >= 0 && nextIndex < atlasIndex.length) {
+            if (atlasIndex[nextIndex].gender === currentGender) {
+                navigateToAtlasIndex(nextIndex);
+                return;
+            }
+            nextIndex += direction;
+        }
+    }
+
+    // --- UI UPDATES ---
+
+    function updateUiForCurrentPage() {
+        const entryIndex = atlasIndex.findIndex(e => e.pageAnnotated === state.currentPageNum || e.pageUnannotated === state.currentPageNum);
+
+        if (entryIndex !== -1) {
+            const entry = atlasIndex[entryIndex];
+            state.currentAtlasEntryIndex = entryIndex;
+            dom.currentGender.textContent = entry.gender;
+            dom.currentAge.textContent = entry.age;
+            dom.rightPanel.classList.remove('collapsed');
+            
+            const hasPrev = atlasIndex.slice(0, entryIndex).some(e => e.gender === entry.gender);
+            const hasNext = atlasIndex.slice(entryIndex + 1).some(e => e.gender === entry.gender);
+            dom.prevAgeBtn.disabled = !hasPrev;
+            dom.nextAgeBtn.disabled = !hasNext;
+            dom.prevPageOverlay.classList.remove('hidden');
+            dom.nextPageOverlay.classList.remove('hidden');
+
+        } else {
+            state.currentAtlasEntryIndex = -1;
+            dom.currentGender.textContent = '-';
+            dom.currentAge.textContent = 'Introductory Page';
+            dom.prevAgeBtn.disabled = true;
+            dom.nextAgeBtn.disabled = true;
+            dom.prevPageOverlay.classList.add('hidden');
+            dom.nextPageOverlay.classList.add('hidden');
+        }
+        
+        dom.zoomLevel.textContent = `${Math.round(state.zoom * 100)}%`;
+    }
+
+    function handlePatientDataUpdate() {
+        const dob = dom.dobInput.value;
+        const studyDate = dom.studyDateInput.value;
+        
+        let shouldJumpToPage = state.isPatientDataEntered === false && dob && studyDate;
+
+        if (!dob || !studyDate) {
+            state.isPatientDataEntered = false;
+            dom.initialMessage.style.display = 'block';
+            dom.pdfViewer.style.display = 'none';
+            dom.chronoAgeOutput.textContent = '';
+            dom.sdOutput.textContent = '';
+            renderPage(1); // Show title page
+            return;
+        }
+        
+        state.isPatientDataEntered = true;
+        dom.initialMessage.style.display = 'none';
+        dom.pdfViewer.style.display = 'block';
+
+        const age = calculateChronologicalAge(dob, studyDate);
+        if (age) {
+            dom.chronoAgeOutput.textContent = `${age.years} years, ${age.months} months`;
+            const sd = findClosestSd(age.totalMonths, state.patientGender);
+            dom.sdOutput.textContent = sd ? `± ${sd} months` : 'N/A';
+            
+            if (shouldJumpToPage) {
+                const closestIndex = findClosestAtlasIndex(age.totalMonths, state.patientGender);
+                if(closestIndex !== -1) {
+                    // Start with unannotated view by default
+                    dom.annotatedToggle.checked = false;
+                    state.isAnnotated = false;
+                    navigateToAtlasIndex(closestIndex);
+                }
+            }
+        }
+    }
+
+
+    // --- EVENT LISTENERS ---
+
+    dom.topPanelToggle.addEventListener('click', () => dom.topPanel.classList.toggle('collapsed'));
+    dom.rightPanelToggle.addEventListener('click', () => dom.rightPanel.classList.toggle('collapsed'));
+
+    dom.genderToggle.addEventListener('click', () => {
+        state.patientGender = (state.patientGender === 'Male') ? 'Female' : 'Male';
+        dom.genderToggle.textContent = state.patientGender;
+        dom.genderToggle.className = (state.patientGender === 'Male') ? 'male' : 'female';
+        
+        // If data is already entered, update SD and jump to the new gender's closest page
+        if (state.isPatientDataEntered) {
+            const age = calculateChronologicalAge(dom.dobInput.value, dom.studyDateInput.value);
+            if (age) {
+                 const sd = findClosestSd(age.totalMonths, state.patientGender);
+                 dom.sdOutput.textContent = sd ? `± ${sd} months` : 'N/A';
+                 const closestIndex = findClosestAtlasIndex(age.totalMonths, state.patientGender);
+                 if(closestIndex !== -1) navigateToAtlasIndex(closestIndex);
+            }
+        }
+    });
+    dom.dobInput.addEventListener('change', handlePatientDataUpdate);
+    dom.studyDateInput.addEventListener('change', handlePatientDataUpdate);
+
+    dom.resetButton.addEventListener('click', () => {
+        dom.dobInput.value = '';
+        setDefaultStudyDate();
+        state.patientGender = 'Male';
+        dom.genderToggle.textContent = 'Male';
+        dom.genderToggle.className = 'male';
+        dom.annotatedToggle.checked = false;
+        state.isAnnotated = false;
+        state.zoom = 1.0;
+        state.isPatientDataEntered = false; // Reset this flag
+        handlePatientDataUpdate();
+    });
+
+    dom.annotatedToggle.addEventListener('change', (e) => {
+        state.isAnnotated = e.target.checked;
+        if (state.currentAtlasEntryIndex !== -1) {
+            navigateToAtlasIndex(state.currentAtlasEntryIndex);
+        }
+    });
+
+    dom.prevAgeBtn.addEventListener('click', () => changeAge(-1));
+    dom.nextAgeBtn.addEventListener('click', () => changeAge(1));
+    dom.prevPageOverlay.addEventListener('click', () => changeAge(-1));
+    dom.nextPageOverlay.addEventListener('click', () => changeAge(1));
+    
+    function handleZoom(factor) {
+        state.zoom = Math.max(0.2, Math.min(5, state.zoom * factor));
+        renderPage(state.currentPageNum);
+    }
+    dom.zoomInBtn.addEventListener('click', () => handleZoom(1.2));
+    dom.zoomOutBtn.addEventListener('click', () => handleZoom(0.8));
+
+    dom.pdfViewer.addEventListener('wheel', e => {
+        e.preventDefault();
+        handleZoom(e.deltaY < 0 ? 1.1 : 0.9);
+    });
+    dom.pdfViewer.addEventListener('mousedown', e => {
+        e.preventDefault();
+        state.isPanning = true;
+        state.panStart.x = e.clientX - dom.mainContent.scrollLeft;
+        state.panStart.y = e.clientY - dom.mainContent.scrollTop;
+        dom.pdfViewer.classList.add('grabbing');
+    });
+    window.addEventListener('mouseup', () => {
+        state.isPanning = false;
+        dom.pdfViewer.classList.remove('grabbing');
+    });
+    window.addEventListener('mousemove', e => {
+        if (!state.isPanning) return;
+        e.preventDefault();
+        const x = e.clientX;
+        const y = e.clientY;
+        dom.mainContent.scrollLeft = state.panStart.x - x;
+        dom.mainContent.scrollTop = state.panStart.y - y;
+    });
+
+    window.addEventListener('keydown', e => {
+        if (document.activeElement.tagName === 'INPUT') return; 
+        if (!state.isPatientDataEntered) return;
+        switch(e.key) {
+            case 'ArrowLeft': e.preventDefault(); changeAge(-1); break;
+            case 'ArrowRight': e.preventDefault(); changeAge(1); break;
+            case '+': case '=': e.preventDefault(); handleZoom(1.2); break;
+            case '-': e.preventDefault(); handleZoom(0.8); break;
+        }
+    });
+
+    // --- INITIALIZATION ---
+    function setDefaultStudyDate() {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        dom.studyDateInput.value = `${yyyy}-${mm}-${dd}`;
+    }
+
+    async function initializeApp() {
+        setDefaultStudyDate();
+        try {
+            const loadingTask = pdfjsLib.getDocument(PDF_PATH);
+            state.pdfDoc = await loadingTask.promise;
+            dom.loader.style.display = 'none';
+            dom.initialMessage.style.display = 'block';
+            renderPage(1); // Render physical page 1 (cover) initially
+        } catch (error) {
+            dom.loader.textContent = 'Error: Could not load "bone-age-atlas.pdf". Make sure it is in the same folder as this HTML file.';
+            console.error(error);
+        }
+    }
+    initializeApp();
+});
+</script>
+</body>
+</html>
