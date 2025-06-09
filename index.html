@@ -91,7 +91,6 @@
                 </div>
                 <div class="input-group">
                     <label for="dob-input">Date of Birth</label>
-                    <!-- CHANGE 1: Switched to type="text" with placeholder and maxlength -->
                     <input type="text" id="dob-input" placeholder="MM/DD/YY" maxlength="8">
                 </div>
                 <div class="input-group">
@@ -117,9 +116,17 @@
         <!-- MAIN PDF VIEWING AREA -->
         <main id="main-content">
             <div id="loader">Loading PDF Atlas...</div>
+            <!-- CHANGE 2 & 3: Updated initial message -->
             <div id="initial-message">
                 <h2>Welcome to the Bone Age Tool</h2>
+                <p style="font-style: italic; margin-top: -10px; margin-bottom: 25px;">by George W. Poulos, MD, PhD</p>
                 <p>Please enter the patient's gender and date of birth in the panel above to begin.</p>
+                <p style="font-size: 0.9em; color: #ccc; margin-top: 20px; line-height: 1.4;">
+                    <strong>Please note:</strong> This tool does not directly calculate the patient's bone age. Rather, it is a helpful tool for the radiologist to determine bone age.
+                </p>
+                 <p style="font-size: 0.9em; color: #ccc; margin-top: 20px; line-height: 1.4;">
+                    Please let me know if you have any further suggestions for this tool.
+                </p>
             </div>
             <div id="pdf-viewer">
                 <canvas id="pdf-canvas"></canvas>
@@ -236,14 +243,13 @@ const standardDeviations = {
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM ELEMENT REFERENCES ---
     const dom = {
-        loader: document.getElementById('loader'), initialMessage: document.getElementById('initial-message'), pdfViewer: document.getElementById('pdf-viewer'), canvas: document.getElementById('pdf-canvas'), topPanel: document.getElementById('top-panel'), topPanelToggle: document.getElementById('top-panel-toggle'), rightPanel: document.getElementById('right-panel'), rightPanelToggle: document.getElementById('right-panel-toggle'), genderToggle: document.getElementById('gender-toggle'), dobInput: document.getElementById('dob-input'), studyDateInput: document.getElementById('study-date-input'), chronoAgeOutput: document.getElementById('chrono-age-output'), sdOutput: document.getElementById('sd-output'), resetButton: document.getElementById('reset-button'), annotatedToggle: document.getElementById('annotated-toggle'), currentGender: document.getElementById('current-gender'), currentAge: document.getElementById('current-age'), prevAgeBtn: document.getElementById('prev-age'), nextAgeBtn: document.getElementById('next-age'), zoomOutBtn: document.getElementById('zoom-out'), zoomInBtn: document.getElementById('zoom-in'), zoomLevel: document.getElementById('zoom-level'), prevPageOverlay: document.getElementById('prev-page-overlay'), nextPageOverlay: document.getElementById('next-page-overlay'),
+        loader: document.getElementById('loader'), initialMessage: document.getElementById('initial-message'), pdfViewer: document.getElementById('pdf-viewer'), canvas: document.getElementById('pdf-canvas'), topPanel: document.getElementById('top-panel'), topPanelToggle: document.getElementById('top-panel-toggle'), rightPanel: document.getElementById('right-panel'), rightPanelToggle: document.getElementById('right-panel-toggle'), genderToggle: document.getElementById('gender-toggle'), dobInput: document.getElementById('dob-input'), studyDateInput: document.getElementById('study-date-input'), chronoAgeOutput: document.getElementById('chrono-age-output'), sdOutput: document.getElementById('sd-output'), resetButton: document.getElementById('reset-button'), annotatedToggle: document.getElementById('annotated-toggle'), currentGender: document.getElementById('current-gender'), currentAge: document.getElementById('current-age'), prevAgeBtn: document.getElementById('prev-age'), nextAgeBtn: document.getElementById('next-age'), zoomOutBtn: document.getElementById('zoom-out'), zoomInBtn: document.getElementById('zoom-in'), zoomLevel: document.getElementById('zoom-level'), prevPageOverlay: document.getElementById('prev-page-overlay'), nextPageOverlay: document.getElementById('next-page-overlay'), mainContent: document.getElementById('main-content')
     };
     const ctx = dom.canvas.getContext('2d');
 
     // --- APPLICATION STATE ---
     let state = {
         pdfDoc: null, currentPageNum: 1, currentAtlasEntryIndex: -1, zoom: 1.0, isAnnotated: false, patientGender: 'Male', isPanning: false, 
-        // CHANGE 3: Updated panStart state for correct logic
         panStart: { x: 0, y: 0, scrollLeft: 0, scrollTop: 0 }, 
         isPatientDataEntered: false
     };
@@ -251,44 +257,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const PDF_PATH = 'bone-age-atlas.pdf';
 
     // --- HELPER FUNCTIONS ---
-    
-    // CHANGE 1: Updated function to parse 'MM/DD/YY' format
     function parseDob(dobString) {
         if (!dobString || dobString.length !== 8) return null;
         const parts = dobString.split('/');
         if (parts.length !== 3) return null;
-        
         const [mm, dd, yy] = parts;
-        // Assume '20' prefix for the year
         const fullYear = `20${yy}`;
-        
-        // Create a date object. new Date() is forgiving, so we do extra checks.
         const d = new Date(`${fullYear}-${mm}-${dd}T00:00:00`);
-        
-        // Check if the parsed date is valid and matches the input parts
-        if (isNaN(d.getTime()) || d.getFullYear() != fullYear || (d.getMonth() + 1) != mm || d.getDate() != dd) {
-            return null;
-        }
+        if (isNaN(d.getTime()) || d.getFullYear() != fullYear || (d.getMonth() + 1) != mm || d.getDate() != dd) { return null; }
         return d;
     }
 
     function calculateChronologicalAge(dob, studyDate) {
-        // DOB is now a Date object, StudyDate is a string 'YYYY-MM-DD'
         if (!dob || !studyDate) return null;
-        
-        let d1 = dob;
-        let d2 = new Date(studyDate);
+        let d1 = dob; let d2 = new Date(studyDate);
         if (d1.getTime() > d2.getTime()) return { years: 0, months: 0, totalMonths: 0 };
-        
         let d1_utc = new Date(Date.UTC(d1.getUTCFullYear(), d1.getUTCMonth(), d1.getUTCDate()));
         let d2_utc = new Date(Date.UTC(d2.getUTCFullYear(), d2.getUTCMonth(), d2.getUTCDate()));
-        
         let years = d2_utc.getUTCFullYear() - d1_utc.getUTCFullYear();
         let months = d2_utc.getUTCMonth() - d1_utc.getUTCMonth();
-        
         if (d2_utc.getUTCDate() < d1_utc.getUTCDate()) { months--; }
         if (months < 0) { years--; months += 12; }
-
         let dayDiff = d2_utc.getUTCDate() - d1_utc.getUTCDate();
         if (dayDiff < 0) {
             let daysInPrevMonth = new Date(d2_utc.getUTCFullYear(), d2_utc.getUTCMonth(), 0).getDate();
@@ -298,7 +287,6 @@ document.addEventListener('DOMContentLoaded', () => {
              months++;
              if (months === 12) { months = 0; years++; }
         }
-        
         return { years, months, totalMonths: (years * 12) + months };
     }
 
@@ -388,38 +376,29 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.zoomLevel.textContent = `${Math.round(state.zoom * 100)}%`;
     }
 
-    // CHANGE 2: This function now handles all data updates and triggers navigation
     function handlePatientDataUpdate() {
         const dobString = dom.dobInput.value;
         const studyDate = dom.studyDateInput.value;
-        
         const dob = parseDob(dobString);
-
         if (!dob || !studyDate) {
             state.isPatientDataEntered = false;
             dom.initialMessage.style.display = 'block';
             dom.pdfViewer.style.display = 'none';
             dom.chronoAgeOutput.textContent = '';
             dom.sdOutput.textContent = '';
-            if (state.currentPageNum !== 1) renderPage(1); // Show title page if not already there
+            if (state.currentPageNum !== 1) renderPage(1);
             return;
         }
-        
         state.isPatientDataEntered = true;
         dom.initialMessage.style.display = 'none';
         dom.pdfViewer.style.display = 'block';
-
         const age = calculateChronologicalAge(dob, studyDate);
         if (age) {
             dom.chronoAgeOutput.textContent = `${age.years} years, ${age.months} months`;
             const sd = findClosestSd(age.totalMonths, state.patientGender);
             dom.sdOutput.textContent = sd ? `± ${sd} months` : 'N/A';
-            
             const closestIndex = findClosestAtlasIndex(age.totalMonths, state.patientGender);
-            if(closestIndex !== -1) {
-                // Always navigate to the correct page on any data change
-                navigateToAtlasIndex(closestIndex);
-            }
+            if(closestIndex !== -1) { navigateToAtlasIndex(closestIndex); }
         } else {
             dom.chronoAgeOutput.textContent = 'Invalid Date';
             dom.sdOutput.textContent = '';
@@ -434,38 +413,24 @@ document.addEventListener('DOMContentLoaded', () => {
         state.patientGender = (state.patientGender === 'Male') ? 'Female' : 'Male';
         dom.genderToggle.textContent = state.patientGender;
         dom.genderToggle.className = (state.patientGender === 'Male') ? 'male' : 'female';
-        handlePatientDataUpdate(); // CHANGE 2: Call main handler
+        handlePatientDataUpdate();
     });
 
-    // CHANGE 1: New listener for custom DOB input formatting
     dom.dobInput.addEventListener('input', (e) => {
         let input = e.target;
-        let value = input.value.replace(/\D/g, ''); // Remove non-digits
+        let value = input.value.replace(/\D/g, '');
         let formattedValue = '';
-        if (value.length > 4) {
-            formattedValue = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4, 6)}`;
-        } else if (value.length > 2) {
-            formattedValue = `${value.slice(0, 2)}/${value.slice(2, 4)}`;
-        } else {
-            formattedValue = value;
-        }
+        if (value.length > 4) { formattedValue = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4, 6)}`; } 
+        else if (value.length > 2) { formattedValue = `${value.slice(0, 2)}/${value.slice(2, 4)}`; } 
+        else { formattedValue = value; }
         input.value = formattedValue;
-        handlePatientDataUpdate(); // CHANGE 2: Call main handler on every keystroke
+        handlePatientDataUpdate();
     });
 
-    dom.studyDateInput.addEventListener('change', handlePatientDataUpdate); // CHANGE 2: Call main handler
+    dom.studyDateInput.addEventListener('change', handlePatientDataUpdate);
     
     dom.resetButton.addEventListener('click', () => {
-        dom.dobInput.value = '';
-        setDefaultStudyDate();
-        state.patientGender = 'Male';
-        dom.genderToggle.textContent = 'Male';
-        dom.genderToggle.className = 'male';
-        dom.annotatedToggle.checked = false;
-        state.isAnnotated = false;
-        state.zoom = 1.0;
-        state.isPatientDataEntered = false;
-        handlePatientDataUpdate();
+        dom.dobInput.value = ''; setDefaultStudyDate(); state.patientGender = 'Male'; dom.genderToggle.textContent = 'Male'; dom.genderToggle.className = 'male'; dom.annotatedToggle.checked = false; state.isAnnotated = false; state.zoom = 1.0; state.isPatientDataEntered = false; handlePatientDataUpdate();
     });
 
     dom.annotatedToggle.addEventListener('change', (e) => {
@@ -487,23 +452,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     dom.pdfViewer.addEventListener('wheel', e => { e.preventDefault(); handleZoom(e.deltaY < 0 ? 1.1 : 0.9); });
 
-    // CHANGE 3: Corrected panning logic
-    dom.pdfViewer.addEventListener('mousedown', e => {
+    // CHANGE 1: Corrected Panning Logic
+    dom.mainContent.addEventListener('mousedown', e => {
+        if (e.target.id !== 'pdf-canvas') return; // Only pan if clicking on the canvas
         e.preventDefault();
         state.isPanning = true;
-        const mainContent = dom.mainContent;
         state.panStart = {
-            scrollLeft: mainContent.scrollLeft,
-            scrollTop: mainContent.scrollTop,
+            scrollLeft: dom.mainContent.scrollLeft,
+            scrollTop: dom.mainContent.scrollTop,
             x: e.clientX,
-            y: e.clientY
+            y: e.clientY,
         };
         dom.pdfViewer.classList.add('grabbing');
     });
+
     window.addEventListener('mouseup', () => {
-        state.isPanning = false;
-        dom.pdfViewer.classList.remove('grabbing');
+        if (state.isPanning) {
+            state.isPanning = false;
+            dom.pdfViewer.classList.remove('grabbing');
+        }
     });
+
     window.addEventListener('mousemove', e => {
         if (!state.isPanning) return;
         e.preventDefault();
