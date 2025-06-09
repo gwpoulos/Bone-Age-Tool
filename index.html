@@ -24,6 +24,7 @@
             --female-color: #e91e63;
             --accent-color: #1abc9c;
             --shadow-color: rgba(0, 0, 0, 0.2);
+            --neutral-color: #7f8c8d;
         }
         html, body {
             margin: 0; padding: 0; height: 100%; width: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: var(--primary-bg); overflow: hidden; color: var(--text-color);
@@ -38,7 +39,6 @@
         #top-panel-content { display: flex; justify-content: space-around; align-items: center; padding: 15px 20px; gap: 20px; flex-wrap: wrap; }
         .input-group, .output-group { display: flex; flex-direction: column; gap: 5px; }
         .input-group label, .output-group .label { font-weight: 600; font-size: 0.9em; color: #555; }
-        /* CHANGE 3: Added font-family: inherit to better normalize input fields */
         .input-group input, .input-group button { padding: 8px 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; font-family: inherit; outline-color: var(--accent-color); }
         .output-group .value { font-size: 1.1em; font-weight: bold; color: var(--primary-bg); min-height: 20px; }
         #gender-toggle { padding: 8px 20px; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; transition: background-color 0.3s; border: none; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
@@ -46,9 +46,9 @@
         #gender-toggle.female { background-color: var(--female-color); }
         #reset-button { background-color: #e74c3c; color: white; }
         #reset-button:hover { background-color: #c0392b; }
-        /* CHANGE 1: Removed flex properties to fix scrolling/panning at high zoom */
+        /* CHANGE 1: Use margin:auto for centering, allowing full scroll range */
         #main-content { grid-row: 2; grid-column: 1; background-color: var(--secondary-bg); overflow: auto; position: relative; }
-        #pdf-viewer { position: relative; cursor: grab; width: fit-content; margin: 20px auto; /* Provides some padding */ }
+        #pdf-viewer { position: relative; cursor: grab; width: fit-content; margin: 20px auto; }
         #pdf-viewer.grabbing { cursor: grabbing; }
         #pdf-canvas { display: block; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
         #initial-message { color: var(--light-text); text-align: center; max-width: 500px; padding: 20px; font-size: 1.2em; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
@@ -78,12 +78,10 @@
         .page-overlay-nav.hidden { display: none; }
         #prev-page-overlay { left: 0; }
         #next-page-overlay { right: 0; }
-        /* CHANGE 4: Style for new data button */
-        .data-button {
-            width: 100%; padding: 10px; font-weight: bold; cursor: pointer; transition: background-color 0.3s; border-radius: 5px; color: white; border: none; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); margin-top: auto; /* Pushes to bottom */
-        }
+        .data-button { width: 100%; padding: 10px; font-weight: bold; cursor: pointer; transition: background-color 0.3s; border-radius: 5px; color: white; border: none; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
         .data-button.male { background-color: var(--male-color); }
         .data-button.female { background-color: var(--female-color); }
+        .data-button.neutral { background-color: var(--neutral-color); }
     </style>
 </head>
 <body>
@@ -176,9 +174,10 @@
                     </div>
                 </div>
             </div>
-             <!-- CHANGE 4: Added "Show Brush Data" button -->
-            <div style="padding: 0 20px 20px 20px;">
+            <div style="padding: 0 20px 20px 20px; display: flex; flex-direction: column; gap: 10px;">
                  <button id="show-data-btn" class="data-button male">Show Brush Data</button>
+                 <!-- CHANGE 3: Added About/Reference button -->
+                 <button id="about-btn" class="data-button neutral">About Reference</button>
             </div>
             <div id="right-panel-toggle"><span class="arrow">Navigation</span></div>
         </aside>
@@ -254,7 +253,7 @@ const standardDeviations = {
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM ELEMENT REFERENCES ---
     const dom = {
-        loader: document.getElementById('loader'), initialMessage: document.getElementById('initial-message'), pdfViewer: document.getElementById('pdf-viewer'), canvas: document.getElementById('pdf-canvas'), topPanel: document.getElementById('top-panel'), topPanelToggle: document.getElementById('top-panel-toggle'), rightPanel: document.getElementById('right-panel'), rightPanelToggle: document.getElementById('right-panel-toggle'), genderToggle: document.getElementById('gender-toggle'), dobInput: document.getElementById('dob-input'), studyDateInput: document.getElementById('study-date-input'), chronoAgeOutput: document.getElementById('chrono-age-output'), sdOutput: document.getElementById('sd-output'), resetButton: document.getElementById('reset-button'), annotatedToggle: document.getElementById('annotated-toggle'), currentGender: document.getElementById('current-gender'), currentAge: document.getElementById('current-age'), prevAgeBtn: document.getElementById('prev-age'), nextAgeBtn: document.getElementById('next-age'), zoomOutBtn: document.getElementById('zoom-out'), zoomInBtn: document.getElementById('zoom-in'), zoomLevel: document.getElementById('zoom-level'), prevPageOverlay: document.getElementById('prev-page-overlay'), nextPageOverlay: document.getElementById('next-page-overlay'), mainContent: document.getElementById('main-content'), showDataBtn: document.getElementById('show-data-btn')
+        loader: document.getElementById('loader'), initialMessage: document.getElementById('initial-message'), pdfViewer: document.getElementById('pdf-viewer'), canvas: document.getElementById('pdf-canvas'), topPanel: document.getElementById('top-panel'), topPanelToggle: document.getElementById('top-panel-toggle'), rightPanel: document.getElementById('right-panel'), rightPanelToggle: document.getElementById('right-panel-toggle'), genderToggle: document.getElementById('gender-toggle'), dobInput: document.getElementById('dob-input'), studyDateInput: document.getElementById('study-date-input'), chronoAgeOutput: document.getElementById('chrono-age-output'), sdOutput: document.getElementById('sd-output'), resetButton: document.getElementById('reset-button'), annotatedToggle: document.getElementById('annotated-toggle'), currentGender: document.getElementById('current-gender'), currentAge: document.getElementById('current-age'), prevAgeBtn: document.getElementById('prev-age'), nextAgeBtn: document.getElementById('next-age'), zoomOutBtn: document.getElementById('zoom-out'), zoomInBtn: document.getElementById('zoom-in'), zoomLevel: document.getElementById('zoom-level'), prevPageOverlay: document.getElementById('prev-page-overlay'), nextPageOverlay: document.getElementById('next-page-overlay'), mainContent: document.getElementById('main-content'), showDataBtn: document.getElementById('show-data-btn'), aboutBtn: document.getElementById('about-btn')
     };
     const ctx = dom.canvas.getContext('2d');
 
@@ -262,68 +261,36 @@ document.addEventListener('DOMContentLoaded', () => {
     let state = {
         pdfDoc: null, currentPageNum: 1, currentAtlasEntryIndex: -1, zoom: 1.0, isAnnotated: false, patientGender: 'Male', isPanning: false, 
         panStart: { x: 0, y: 0, scrollLeft: 0, scrollTop: 0 }, 
-        isPatientDataEntered: false
+        isPatientDataEntered: false,
+        lastViewedAtlasIndex: -1, // For Brush Data toggle
+        lastPageBeforeInfo: 1 // For About toggle
     };
 
     const PDF_PATH = 'bone-age-atlas.pdf';
 
     // --- HELPER FUNCTIONS ---
-    function parseDob(dobString) {
-        if (!dobString || dobString.length !== 8) return null;
-        const parts = dobString.split('/');
-        if (parts.length !== 3) return null;
-        const [mm, dd, yy] = parts;
-        const fullYear = `20${yy}`;
-        const d = new Date(`${fullYear}-${mm}-${dd}T00:00:00`);
-        if (isNaN(d.getTime()) || d.getFullYear() != fullYear || (d.getMonth() + 1) != mm || d.getDate() != dd) { return null; }
-        return d;
-    }
-
-    function calculateChronologicalAge(dob, studyDate) {
-        if (!dob || !studyDate) return null;
-        let d1 = dob; let d2 = new Date(studyDate);
-        if (d1.getTime() > d2.getTime()) return { years: 0, months: 0, totalMonths: 0 };
-        let d1_utc = new Date(Date.UTC(d1.getUTCFullYear(), d1.getUTCMonth(), d1.getUTCDate()));
-        let d2_utc = new Date(Date.UTC(d2.getUTCFullYear(), d2.getUTCMonth(), d2.getUTCDate()));
-        let years = d2_utc.getUTCFullYear() - d1_utc.getUTCFullYear();
-        let months = d2_utc.getUTCMonth() - d1_utc.getUTCMonth();
-        if (d2_utc.getUTCDate() < d1_utc.getUTCDate()) { months--; }
-        if (months < 0) { years--; months += 12; }
-        let dayDiff = d2_utc.getUTCDate() - d1_utc.getUTCDate();
-        if (dayDiff < 0) {
-            let daysInPrevMonth = new Date(d2_utc.getUTCFullYear(), d2_utc.getUTCMonth(), 0).getDate();
-            dayDiff += daysInPrevMonth;
-        }
-        if (dayDiff >= 15) {
-             months++;
-             if (months === 12) { months = 0; years++; }
-        }
-        return { years, months, totalMonths: (years * 12) + months };
-    }
-
-    function findClosestSd(totalMonths, gender) {
-        const data = (gender === 'Male') ? standardDeviations.boys : standardDeviations.girls;
-        if (!data || data.length === 0) return null;
-        let closest = data.reduce((prev, curr) => (Math.abs(curr.chronologicalMonths - totalMonths) < Math.abs(prev.chronologicalMonths - totalMonths) ? curr : prev));
-        return closest.sdMonths;
-    }
-    
-    function findClosestAtlasIndex(totalMonths, gender) {
-        const genderSpecificAtlas = atlasIndex.map((entry, index) => ({...entry, originalIndex: index})).filter(entry => entry.gender === gender);
-        if (genderSpecificAtlas.length === 0) return -1;
-        const closestEntry = genderSpecificAtlas.reduce((prev, curr) => (Math.abs(curr.ageInMonths - totalMonths) < Math.abs(prev.ageInMonths - totalMonths) ? curr : prev));
-        return closestEntry.originalIndex;
-    }
+    function parseDob(dobString) { if (!dobString || dobString.length !== 8) return null; const parts = dobString.split('/'); if (parts.length !== 3) return null; const [mm, dd, yy] = parts; const fullYear = `20${yy}`; const d = new Date(`${fullYear}-${mm}-${dd}T00:00:00`); if (isNaN(d.getTime()) || d.getFullYear() != fullYear || (d.getMonth() + 1) != mm || d.getDate() != dd) { return null; } return d; }
+    function calculateChronologicalAge(dob, studyDate) { if (!dob || !studyDate) return null; let d1 = dob; let d2 = new Date(studyDate); if (d1.getTime() > d2.getTime()) return { years: 0, months: 0, totalMonths: 0 }; let d1_utc = new Date(Date.UTC(d1.getUTCFullYear(), d1.getUTCMonth(), d1.getUTCDate())); let d2_utc = new Date(Date.UTC(d2.getUTCFullYear(), d2.getUTCMonth(), d2.getUTCDate())); let years = d2_utc.getUTCFullYear() - d1_utc.getUTCFullYear(); let months = d2_utc.getUTCMonth() - d1_utc.getUTCMonth(); if (d2_utc.getUTCDate() < d1_utc.getUTCDate()) { months--; } if (months < 0) { years--; months += 12; } let dayDiff = d2_utc.getUTCDate() - d1_utc.getUTCDate(); if (dayDiff < 0) { let daysInPrevMonth = new Date(d2_utc.getUTCFullYear(), d2_utc.getUTCMonth(), 0).getDate(); dayDiff += daysInPrevMonth; } if (dayDiff >= 15) { months++; if (months === 12) { months = 0; years++; } } return { years, months, totalMonths: (years * 12) + months }; }
+    function findClosestSd(totalMonths, gender) { const data = (gender === 'Male') ? standardDeviations.boys : standardDeviations.girls; if (!data || data.length === 0) return null; let closest = data.reduce((prev, curr) => (Math.abs(curr.chronologicalMonths - totalMonths) < Math.abs(prev.chronologicalMonths - totalMonths) ? curr : prev)); return closest.sdMonths; }
+    function findClosestAtlasIndex(totalMonths, gender) { const genderSpecificAtlas = atlasIndex.map((entry, index) => ({...entry, originalIndex: index})).filter(entry => entry.gender === gender); if (genderSpecificAtlas.length === 0) return -1; const closestEntry = genderSpecificAtlas.reduce((prev, curr) => (Math.abs(curr.ageInMonths - totalMonths) < Math.abs(prev.ageInMonths - totalMonths) ? curr : prev)); return closestEntry.originalIndex; }
 
     // --- RENDERING AND NAVIGATION ---
-    async function renderPage(pageNum) {
+    async function renderPage(pageNum, scaleMode = 'zoom') {
         if (!state.pdfDoc || pageNum < 1 || pageNum > state.pdfDoc.numPages) return;
         dom.loader.style.display = 'block';
         dom.pdfViewer.style.display = 'none';
         dom.initialMessage.style.display = 'none';
         try {
             const page = await state.pdfDoc.getPage(pageNum);
-            const viewport = page.getViewport({ scale: state.zoom });
+            let scale = state.zoom;
+            // CHANGE 2: Implement 'fit' scaling mode for title page
+            if (scaleMode === 'fit') {
+                const viewport = page.getViewport({ scale: 1 });
+                const containerWidth = dom.mainContent.clientWidth;
+                const containerHeight = dom.mainContent.clientHeight;
+                scale = Math.min(containerWidth / viewport.width, containerHeight / viewport.height) * 0.95; // 95% for some padding
+            }
+            const viewport = page.getViewport({ scale: scale });
             dom.canvas.height = viewport.height;
             dom.canvas.width = viewport.width;
             const renderContext = { canvasContext: ctx, viewport: viewport };
@@ -331,73 +298,50 @@ document.addEventListener('DOMContentLoaded', () => {
             state.currentPageNum = pageNum;
             updateUiForCurrentPage();
         } catch (error) {
-            console.error('Error rendering page:', error);
-            dom.loader.textContent = 'Error loading page.';
+            console.error('Error rendering page:', error); dom.loader.textContent = 'Error loading page.';
         } finally {
             dom.loader.style.display = 'none';
             dom.pdfViewer.style.display = 'block';
         }
     }
     
-    function navigateToAtlasIndex(index) {
-        if (index < 0 || index >= atlasIndex.length) return;
-        state.currentAtlasEntryIndex = index;
-        const entry = atlasIndex[index];
-        const pageToRender = state.isAnnotated ? entry.pageAnnotated : entry.pageUnannotated;
-        if(state.currentPageNum !== pageToRender) { renderPage(pageToRender); } 
-        else { updateUiForCurrentPage(); }
-    }
-
-    function changeAge(direction) {
-        if (state.currentAtlasEntryIndex === -1) return;
-        const currentGender = atlasIndex[state.currentAtlasEntryIndex].gender;
-        let nextIndex = state.currentAtlasEntryIndex + direction;
-        while (nextIndex >= 0 && nextIndex < atlasIndex.length) {
-            if (atlasIndex[nextIndex].gender === currentGender) {
-                navigateToAtlasIndex(nextIndex);
-                return;
-            }
-            nextIndex += direction;
-        }
-    }
+    function navigateToAtlasIndex(index) { if (index < 0 || index >= atlasIndex.length) return; state.currentAtlasEntryIndex = index; const entry = atlasIndex[index]; const pageToRender = state.isAnnotated ? entry.pageAnnotated : entry.pageUnannotated; if(state.currentPageNum !== pageToRender) { renderPage(pageToRender); } else { updateUiForCurrentPage(); } }
+    function changeAge(direction) { if (state.currentAtlasEntryIndex === -1) return; const currentGender = atlasIndex[state.currentAtlasEntryIndex].gender; let nextIndex = state.currentAtlasEntryIndex + direction; while (nextIndex >= 0 && nextIndex < atlasIndex.length) { if (atlasIndex[nextIndex].gender === currentGender) { navigateToAtlasIndex(nextIndex); return; } nextIndex += direction; } }
 
     // --- UI UPDATES ---
     function updateUiForCurrentPage() {
+        const onDataPage = state.currentPageNum === 21 || state.currentPageNum === 22;
+        const onTitlePage = state.currentPageNum === 1;
+
+        // Update main navigation info
         const entryIndex = atlasIndex.findIndex(e => e.pageAnnotated === state.currentPageNum || e.pageUnannotated === state.currentPageNum);
         if (entryIndex !== -1) {
-            const entry = atlasIndex[entryIndex];
-            state.currentAtlasEntryIndex = entryIndex;
-            dom.currentGender.textContent = entry.gender;
-            dom.currentAge.textContent = entry.age;
-            dom.rightPanel.classList.remove('collapsed');
+            const entry = atlasIndex[entryIndex]; state.currentAtlasEntryIndex = entryIndex; dom.currentGender.textContent = entry.gender; dom.currentAge.textContent = entry.age; dom.rightPanel.classList.remove('collapsed');
             const hasPrev = atlasIndex.slice(0, entryIndex).some(e => e.gender === entry.gender);
             const hasNext = atlasIndex.slice(entryIndex + 1).some(e => e.gender === entry.gender);
-            dom.prevAgeBtn.disabled = !hasPrev;
-            dom.nextAgeBtn.disabled = !hasNext;
-            dom.prevPageOverlay.classList.remove('hidden');
-            dom.nextPageOverlay.classList.remove('hidden');
+            dom.prevAgeBtn.disabled = !hasPrev; dom.nextAgeBtn.disabled = !hasNext;
+            dom.prevPageOverlay.classList.remove('hidden'); dom.nextPageOverlay.classList.remove('hidden');
         } else {
-            state.currentAtlasEntryIndex = -1;
-            dom.currentGender.textContent = '-';
-            dom.currentAge.textContent = 'Data Table';
-            dom.prevAgeBtn.disabled = true;
-            dom.nextAgeBtn.disabled = true;
-            dom.prevPageOverlay.classList.add('hidden');
-            dom.nextPageOverlay.classList.add('hidden');
+            state.currentAtlasEntryIndex = -1; dom.currentGender.textContent = '-'; dom.currentAge.textContent = onDataPage ? 'Data Table' : 'Reference';
+            dom.prevAgeBtn.disabled = true; dom.nextAgeBtn.disabled = true;
+            dom.prevPageOverlay.classList.add('hidden'); dom.nextPageOverlay.classList.add('hidden');
         }
-        dom.zoomLevel.textContent = `${Math.round(state.zoom * 100)}%`;
+        
+        // Update zoom controls
+        const zoomDisabled = onTitlePage;
+        dom.zoomLevel.textContent = zoomDisabled ? 'Fit to Page' : `${Math.round(state.zoom * 100)}%`;
+        dom.zoomInBtn.disabled = zoomDisabled; dom.zoomOutBtn.disabled = zoomDisabled;
+        
+        // CHANGE 1 & 4: Update stateful buttons
+        dom.showDataBtn.textContent = onDataPage ? 'Hide Brush Data' : 'Show Brush Data';
+        dom.aboutBtn.textContent = onTitlePage ? 'Hide Reference' : 'About Reference';
     }
 
     function handlePatientDataUpdate() {
-        const dobString = dom.dobInput.value;
-        const studyDate = dom.studyDateInput.value;
-        const dob = parseDob(dobString);
+        const dobString = dom.dobInput.value; const studyDate = dom.studyDateInput.value; const dob = parseDob(dobString);
         if (!dob || !studyDate) {
             state.isPatientDataEntered = false;
-            dom.initialMessage.style.display = 'block';
-            dom.pdfViewer.style.display = 'none';
-            dom.chronoAgeOutput.textContent = '';
-            dom.sdOutput.textContent = '';
+            dom.chronoAgeOutput.textContent = ''; dom.sdOutput.textContent = '';
             return;
         }
         state.isPatientDataEntered = true;
@@ -409,128 +353,54 @@ document.addEventListener('DOMContentLoaded', () => {
             const closestIndex = findClosestAtlasIndex(age.totalMonths, state.patientGender);
             if(closestIndex !== -1) { navigateToAtlasIndex(closestIndex); }
         } else {
-            dom.chronoAgeOutput.textContent = 'Invalid Date';
-            dom.sdOutput.textContent = '';
+            dom.chronoAgeOutput.textContent = 'Invalid Date'; dom.sdOutput.textContent = '';
         }
     }
 
     // --- EVENT LISTENERS ---
     dom.topPanelToggle.addEventListener('click', () => dom.topPanel.classList.toggle('collapsed'));
     dom.rightPanelToggle.addEventListener('click', () => dom.rightPanel.classList.toggle('collapsed'));
-
-    dom.genderToggle.addEventListener('click', () => {
-        state.patientGender = (state.patientGender === 'Male') ? 'Female' : 'Male';
-        dom.genderToggle.textContent = state.patientGender;
-        const genderClass = state.patientGender.toLowerCase();
-        dom.genderToggle.className = genderClass;
-        dom.showDataBtn.classList.remove('male', 'female');
-        dom.showDataBtn.classList.add(genderClass);
-        handlePatientDataUpdate();
-    });
-
-    dom.dobInput.addEventListener('input', (e) => {
-        let input = e.target;
-        let value = input.value.replace(/\D/g, '');
-        let formattedValue = '';
-        if (value.length > 4) { formattedValue = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4, 6)}`; } 
-        else if (value.length > 2) { formattedValue = `${value.slice(0, 2)}/${value.slice(2, 4)}`; } 
-        else { formattedValue = value; }
-        input.value = formattedValue;
-        handlePatientDataUpdate();
-    });
-
+    dom.genderToggle.addEventListener('click', () => { state.patientGender = (state.patientGender === 'Male') ? 'Female' : 'Male'; dom.genderToggle.textContent = state.patientGender; const genderClass = state.patientGender.toLowerCase(); dom.genderToggle.className = genderClass; dom.showDataBtn.className = `data-button ${genderClass}`; handlePatientDataUpdate(); });
+    dom.dobInput.addEventListener('input', (e) => { let input = e.target; let value = input.value.replace(/\D/g, ''); let formattedValue = ''; if (value.length > 4) { formattedValue = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4, 6)}`; } else if (value.length > 2) { formattedValue = `${value.slice(0, 2)}/${value.slice(2, 4)}`; } else { formattedValue = value; } input.value = formattedValue; handlePatientDataUpdate(); });
     dom.studyDateInput.addEventListener('change', handlePatientDataUpdate);
+    dom.resetButton.addEventListener('click', () => { dom.dobInput.value = ''; setDefaultStudyDate(); state.patientGender = 'Male'; dom.genderToggle.textContent = 'Male'; dom.genderToggle.className = 'male'; dom.showDataBtn.className = 'data-button male'; dom.annotatedToggle.checked = false; state.isAnnotated = false; state.zoom = 1.0; state.isPatientDataEntered = false; handlePatientDataUpdate(); dom.initialMessage.style.display = 'block'; dom.pdfViewer.style.display = 'none'; updateUiForCurrentPage(); });
+    dom.annotatedToggle.addEventListener('change', (e) => { state.isAnnotated = e.target.checked; if (state.currentAtlasEntryIndex !== -1) navigateToAtlasIndex(state.currentAtlasEntryIndex); });
+    dom.prevAgeBtn.addEventListener('click', () => changeAge(-1)); dom.nextAgeBtn.addEventListener('click', () => changeAge(1));
+    dom.prevPageOverlay.addEventListener('click', () => changeAge(-1)); dom.nextPageOverlay.addEventListener('click', () => changeAge(1));
     
-    dom.resetButton.addEventListener('click', () => {
-        dom.dobInput.value = ''; setDefaultStudyDate(); state.patientGender = 'Male'; dom.genderToggle.textContent = 'Male'; dom.genderToggle.className = 'male'; dom.showDataBtn.classList.remove('female'); dom.showDataBtn.classList.add('male'); dom.annotatedToggle.checked = false; state.isAnnotated = false; state.zoom = 1.0; state.isPatientDataEntered = false; handlePatientDataUpdate();
-        dom.initialMessage.style.display = 'block';
-        dom.pdfViewer.style.display = 'none';
-        renderPage(1);
-    });
-
-    dom.annotatedToggle.addEventListener('change', (e) => {
-        state.isAnnotated = e.target.checked;
-        if (state.currentAtlasEntryIndex !== -1) navigateToAtlasIndex(state.currentAtlasEntryIndex);
-    });
-
-    dom.prevAgeBtn.addEventListener('click', () => changeAge(-1));
-    dom.nextAgeBtn.addEventListener('click', () => changeAge(1));
-    dom.prevPageOverlay.addEventListener('click', () => changeAge(-1));
-    dom.nextPageOverlay.addEventListener('click', () => changeAge(1));
-    
+    // CHANGE 1 & 4: Stateful button logic
     dom.showDataBtn.addEventListener('click', () => {
-        const page = state.patientGender === 'Male' ? 21 : 22; // Physical page 21 (labeled 8) or 22 (labeled 9)
-        renderPage(page);
+        if (dom.showDataBtn.textContent.includes('Show')) {
+            state.lastViewedAtlasIndex = state.currentAtlasEntryIndex > -1 ? state.currentAtlasEntryIndex : state.lastViewedAtlasIndex;
+            const page = state.patientGender === 'Male' ? 21 : 22; renderPage(page);
+        } else {
+            navigateToAtlasIndex(state.lastViewedAtlasIndex);
+        }
+    });
+    // CHANGE 3: Stateful button logic
+    dom.aboutBtn.addEventListener('click', () => {
+        if (dom.aboutBtn.textContent.includes('About')) {
+            state.lastPageBeforeInfo = state.currentPageNum;
+            renderPage(1, 'fit');
+        } else {
+            const lastPage = state.lastPageBeforeInfo;
+            // If returning to the title page itself, re-render it to fit. Otherwise, use zoom.
+            const scaleMode = (lastPage === 1) ? 'fit' : 'zoom';
+            renderPage(lastPage, scaleMode);
+        }
     });
     
-    function handleZoom(factor) {
-        state.zoom = Math.max(0.2, Math.min(5, state.zoom * factor));
-        renderPage(state.currentPageNum);
-    }
-    dom.zoomInBtn.addEventListener('click', () => handleZoom(1.2));
-    dom.zoomOutBtn.addEventListener('click', () => handleZoom(0.8));
-
+    function handleZoom(factor) { if (state.currentPageNum === 1) return; state.zoom = Math.max(0.2, Math.min(5, state.zoom * factor)); renderPage(state.currentPageNum); }
+    dom.zoomInBtn.addEventListener('click', () => handleZoom(1.2)); dom.zoomOutBtn.addEventListener('click', () => handleZoom(0.8));
     dom.mainContent.addEventListener('wheel', e => { e.preventDefault(); handleZoom(e.deltaY < 0 ? 1.1 : 0.9); });
-
-    dom.mainContent.addEventListener('mousedown', e => {
-        if (e.target.id !== 'pdf-canvas') return;
-        e.preventDefault();
-        state.isPanning = true;
-        state.panStart = {
-            scrollLeft: dom.mainContent.scrollLeft, scrollTop: dom.mainContent.scrollTop,
-            x: e.clientX, y: e.clientY,
-        };
-        dom.pdfViewer.classList.add('grabbing');
-    });
-
-    window.addEventListener('mouseup', () => {
-        if (state.isPanning) {
-            state.isPanning = false;
-            dom.pdfViewer.classList.remove('grabbing');
-        }
-    });
-
-    window.addEventListener('mousemove', e => {
-        if (!state.isPanning) return;
-        e.preventDefault();
-        const dx = e.clientX - state.panStart.x;
-        const dy = e.clientY - state.panStart.y;
-        dom.mainContent.scrollLeft = state.panStart.scrollLeft - dx;
-        dom.mainContent.scrollTop = state.panStart.scrollTop - dy;
-    });
-
-    window.addEventListener('keydown', e => {
-        if (document.activeElement.tagName === 'INPUT') return; 
-        if (!state.isPatientDataEntered) return;
-        switch(e.key) {
-            case 'ArrowLeft': e.preventDefault(); changeAge(-1); break;
-            case 'ArrowRight': e.preventDefault(); changeAge(1); break;
-            case '+': case '=': e.preventDefault(); handleZoom(1.2); break;
-            case '-': e.preventDefault(); handleZoom(0.8); break;
-        }
-    });
+    dom.mainContent.addEventListener('mousedown', e => { if (e.target.id !== 'pdf-canvas') return; e.preventDefault(); state.isPanning = true; state.panStart = { scrollLeft: dom.mainContent.scrollLeft, scrollTop: dom.mainContent.scrollTop, x: e.clientX, y: e.clientY, }; dom.pdfViewer.classList.add('grabbing'); });
+    window.addEventListener('mouseup', () => { if (state.isPanning) { state.isPanning = false; dom.pdfViewer.classList.remove('grabbing'); } });
+    window.addEventListener('mousemove', e => { if (!state.isPanning) return; e.preventDefault(); const dx = e.clientX - state.panStart.x; const dy = e.clientY - state.panStart.y; dom.mainContent.scrollLeft = state.panStart.scrollLeft - dx; dom.mainContent.scrollTop = state.panStart.scrollTop - dy; });
+    window.addEventListener('keydown', e => { if (document.activeElement.tagName === 'INPUT') return; if (!state.isPatientDataEntered) return; const key = e.key; if (key === 'ArrowLeft' || key === 'ArrowRight') { e.preventDefault(); changeAge(key === 'ArrowLeft' ? -1 : 1); } else if (key === '+' || key === '=' || key === '-') { e.preventDefault(); handleZoom(key === '-' ? 0.8 : 1.2); } });
 
     // --- INITIALIZATION ---
-    function setDefaultStudyDate() {
-        const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        dom.studyDateInput.value = `${yyyy}-${mm}-${dd}`;
-    }
-
-    async function initializeApp() {
-        setDefaultStudyDate();
-        try {
-            const loadingTask = pdfjsLib.getDocument(PDF_PATH);
-            state.pdfDoc = await loadingTask.promise;
-            dom.loader.style.display = 'none';
-            dom.initialMessage.style.display = 'block';
-        } catch (error) {
-            dom.loader.textContent = 'Error: Could not load "bone-age-atlas.pdf". Make sure it is in the same folder as this HTML file.';
-            console.error(error);
-        }
-    }
+    function setDefaultStudyDate() { const today = new Date(); const yyyy = today.getFullYear(); const mm = String(today.getMonth() + 1).padStart(2, '0'); const dd = String(today.getDate()).padStart(2, '0'); dom.studyDateInput.value = `${yyyy}-${mm}-${dd}`; }
+    async function initializeApp() { setDefaultStudyDate(); try { const loadingTask = pdfjsLib.getDocument(PDF_PATH); state.pdfDoc = await loadingTask.promise; dom.loader.style.display = 'none'; dom.initialMessage.style.display = 'block'; } catch (error) { dom.loader.textContent = 'Error: Could not load "bone-age-atlas.pdf". Make sure it is in the same folder as this HTML file.'; console.error(error); } }
     initializeApp();
 });
 </script>
