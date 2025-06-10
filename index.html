@@ -57,7 +57,6 @@
         #top-panel-toggle .arrow { transition: transform 0.3s; }
         #top-panel.collapsed .arrow { transform: rotate(180deg); }
 
-        /* CHANGE 2: Add padding to bottom of content to make space for the absolute toggle */
         #top-panel-content { 
             display: flex; justify-content: space-around; align-items: center; padding: 15px 20px; gap: 20px; flex-wrap: wrap; 
             padding-bottom: 40px; 
@@ -81,6 +80,7 @@
         #pdf-viewer { position: relative; cursor: grab; width: fit-content; margin: 20px auto; }
         #pdf-viewer.grabbing { cursor: grabbing; }
         #pdf-canvas { display: block; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        
         #right-panel {
             grid-row: 2; grid-column: 2; background-color: var(--panel-bg); border-left: 2px solid var(--border-color); width: auto; position: relative; z-index: 50; overflow: hidden; display: flex; flex-direction: row;
             transition: max-width 0.4s ease-in-out;
@@ -99,7 +99,13 @@
             justify-content: center;
             align-items: center;
         }
-        #right-panel-toggle .arrow { writing-mode: vertical-rl; font-weight: bold; transform-origin: center; transition: transform 0.3s; }
+        /* CHANGE 1: Adjusted CSS for right panel arrow */
+        #right-panel-toggle .arrow { 
+            font-size: 1.5em;
+            line-height: 1;
+            transform-origin: center; 
+            transition: transform 0.3s;
+        }
         #right-panel.collapsed .arrow { transform: rotate(180deg); }
 
         #right-panel-container { min-width: 248px; display: flex; flex-direction: column; }
@@ -133,7 +139,6 @@
 
     <div id="app-container">
         <!-- TOP COLLAPSIBLE PANEL -->
-        <!-- CHANGE 1: Removed 'collapsed' class to have it open by default -->
         <div id="top-panel">
             <div id="top-panel-content">
                 <div class="input-group">
@@ -191,7 +196,7 @@
 
         <!-- RIGHT COLLAPSIBLE PANEL -->
         <aside id="right-panel" class="collapsed">
-            <div id="right-panel-toggle"><span class="arrow">Navigation</span></div>
+            <div id="right-panel-toggle"><span class="arrow">◄</span></div>
             <div id="right-panel-container">
                 <div id="right-panel-content">
                     <div class="nav-group">
@@ -368,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function navigateToAtlasIndex(index) { if (index < 0 || index >= atlasIndex.length) return; state.currentAtlasEntryIndex = index; const entry = atlasIndex[index]; const pageToRender = state.isAnnotated ? entry.pageAnnotated : entry.pageUnannotated; if(state.currentPageNum !== pageToRender) { renderPage(pageToRender); } else { updateUiForCurrentPage(); } }
+    function navigateToAtlasIndex(index) { if (index < 0 || index >= atlasIndex.length) return; dom.rightPanel.classList.remove('collapsed'); state.currentAtlasEntryIndex = index; const entry = atlasIndex[index]; const pageToRender = state.isAnnotated ? entry.pageAnnotated : entry.pageUnannotated; if(state.currentPageNum !== pageToRender) { renderPage(pageToRender); } else { updateUiForCurrentPage(); } }
     function changeAge(direction) { captureScrollRatio(); if (state.currentAtlasEntryIndex === -1) return; const currentGender = atlasIndex[state.currentAtlasEntryIndex].gender; let nextIndex = state.currentAtlasEntryIndex + direction; while (nextIndex >= 0 && nextIndex < atlasIndex.length) { if (atlasIndex[nextIndex].gender === currentGender) { navigateToAtlasIndex(nextIndex); return; } nextIndex += direction; } }
 
     // --- UI UPDATES ---
@@ -378,7 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const entryIndex = atlasIndex.findIndex(e => e.pageAnnotated === state.currentPageNum || e.pageUnannotated === state.currentPageNum);
         if (entryIndex !== -1) {
-            const entry = atlasIndex[entryIndex]; state.currentAtlasEntryIndex = entryIndex; dom.currentGender.textContent = entry.gender; dom.currentAge.textContent = entry.age; dom.rightPanel.classList.remove('collapsed');
+            const entry = atlasIndex[entryIndex]; state.currentAtlasEntryIndex = entryIndex; dom.currentGender.textContent = entry.gender; dom.currentAge.textContent = entry.age; 
             const hasPrev = atlasIndex.slice(0, entryIndex).some(e => e.gender === entry.gender); const hasNext = atlasIndex.slice(entryIndex + 1).some(e => e.gender === entry.gender);
             dom.prevAgeBtn.disabled = !hasPrev; dom.nextAgeBtn.disabled = !hasNext;
             dom.prevPageOverlay.classList.remove('hidden'); dom.nextPageOverlay.classList.remove('hidden');
@@ -433,8 +438,8 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.annotatedToggle.addEventListener('change', (e) => { captureScrollRatio(); state.isAnnotated = e.target.checked; if (state.currentAtlasEntryIndex !== -1) navigateToAtlasIndex(state.currentAtlasEntryIndex); });
     dom.prevAgeBtn.addEventListener('click', () => changeAge(-1)); dom.nextAgeBtn.addEventListener('click', () => changeAge(1));
     dom.prevPageOverlay.addEventListener('click', () => changeAge(-1)); dom.nextPageOverlay.addEventListener('click', () => changeAge(1));
-    dom.showDataBtn.addEventListener('click', () => { captureScrollRatio(); if (dom.showDataBtn.textContent.includes('Show')) { state.lastViewedAtlasPage = state.currentPageNum; const page = state.patientGender === 'Male' ? 21 : 22; renderPage(page); } else { renderPage(state.lastViewedAtlasPage); } });
-    dom.aboutBtn.addEventListener('click', () => { captureScrollRatio(); if (dom.aboutBtn.textContent.includes('About')) { state.lastViewedAtlasPage = state.currentPageNum; renderPage(1, 'fit', false); } else { const lastPage = state.lastViewedAtlasPage; renderPage(lastPage, 'zoom'); } });
+    dom.showDataBtn.addEventListener('click', () => { captureScrollRatio(); if (dom.showDataBtn.textContent.includes('Show')) { dom.rightPanel.classList.remove('collapsed'); state.lastViewedAtlasPage = state.currentPageNum; const page = state.patientGender === 'Male' ? 21 : 22; renderPage(page); } else { renderPage(state.lastViewedAtlasPage); } });
+    dom.aboutBtn.addEventListener('click', () => { captureScrollRatio(); if (dom.aboutBtn.textContent.includes('About')) { dom.rightPanel.classList.remove('collapsed'); state.lastViewedAtlasPage = state.currentPageNum; renderPage(1, 'fit', false); } else { const lastPage = state.lastViewedAtlasPage; renderPage(lastPage, 'zoom'); } });
     
     async function applyZoom(factor, origin = null) {
         if (state.currentPageNum === 1) return;
