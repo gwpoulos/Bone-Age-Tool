@@ -195,8 +195,7 @@
 
         <!-- RIGHT COLLAPSIBLE PANEL -->
         <aside id="right-panel" class="collapsed">
-            <!-- CHANGE 1: Arrow character changed to point right when open -->
-            <div id="right-panel-toggle"><span class="arrow">►</span></div>
+            <div id="right-panel-toggle"><span class="arrow">◄</span></div>
             <div id="right-panel-container">
                 <div id="right-panel-content">
                     <div class="nav-group">
@@ -450,7 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.genderToggle.addEventListener('click', () => { captureScrollRatio(); state.patientGender = (state.patientGender === 'Male') ? 'Female' : 'Male'; dom.genderToggle.textContent = state.patientGender; const genderClass = state.patientGender.toLowerCase(); dom.genderToggle.className = genderClass; dom.showDataBtn.className = `data-button ${genderClass}`; handlePatientDataUpdate(); });
     dom.dobInput.addEventListener('input', (e) => { let input = e.target; let value = input.value.replace(/\D/g, ''); let formattedValue = ''; if (value.length > 4) { formattedValue = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4, 6)}`; } else if (value.length > 2) { formattedValue = `${value.slice(0, 2)}/${value.slice(2, 4)}`; } else { formattedValue = value; } input.value = formattedValue; handlePatientDataUpdate(); });
     dom.studyDateInput.addEventListener('change', handlePatientDataUpdate);
-    dom.resetButton.addEventListener('click', () => { dom.dobInput.value = ''; setDefaultStudyDate(); state.patientGender = 'Male'; dom.genderToggle.textContent = 'Male'; dom.genderToggle.className = 'male'; dom.showDataBtn.className = 'data-button male'; dom.annotatedToggle.checked = false; state.isAnnotated = false; state.zoom = 1.0; state.isPatientDataEntered = false; handlePatientDataUpdate(); dom.welcomeScreen.style.display = 'flex'; dom.pdfViewer.style.display = 'none'; updateUiForCurrentPage(); });
+    dom.resetButton.addEventListener('click', () => { dom.dobInput.value = ''; setDefaultStudyDate(); state.patientGender = 'Male'; dom.genderToggle.textContent = 'Male'; dom.genderToggle.className = 'male'; dom.showDataBtn.className = 'data-button male'; dom.annotatedToggle.checked = false; state.isAnnotated = false; state.zoom = 1.0; state.isPatientDataEntered = false; handlePatientDataUpdate(); dom.welcomeScreen.style.display = 'flex'; dom.pdfViewer.style.display = 'none'; dom.rightPanel.classList.add('collapsed'); updateUiForCurrentPage(); });
     dom.annotatedToggle.addEventListener('change', (e) => { captureScrollRatio(); state.isAnnotated = e.target.checked; if (state.currentAtlasEntryIndex !== -1) navigateToAtlasIndex(state.currentAtlasEntryIndex); });
     dom.prevAgeBtn.addEventListener('click', () => changeAge(-1)); dom.nextAgeBtn.addEventListener('click', () => changeAge(1));
     dom.prevPageOverlay.addEventListener('click', () => changeAge(-1)); dom.nextPageOverlay.addEventListener('click', () => changeAge(1));
