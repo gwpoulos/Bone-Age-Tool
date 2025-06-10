@@ -30,7 +30,6 @@
             margin: 0; padding: 0; height: 100%; width: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: var(--primary-bg); overflow: hidden; color: var(--text-color);
         }
         #app-container { display: grid; grid-template-rows: auto 1fr; grid-template-columns: 1fr auto; height: 100vh; width: 100vw; }
-        /* CHANGE 1: Removed collapsible-related styles */
         #top-panel { grid-column: 1 / -1; background-color: var(--panel-bg); border-bottom: 2px solid var(--border-color); position: relative; z-index: 100; box-shadow: 0 4px 12px var(--shadow-color); }
         #top-panel-content { display: flex; justify-content: space-around; align-items: center; padding: 15px 20px; gap: 20px; flex-wrap: wrap; }
         .input-group, .output-group { display: flex; flex-direction: column; gap: 5px; }
@@ -43,7 +42,6 @@
         #reset-button { background-color: #e74c3c; color: white; }
         #reset-button:hover { background-color: #c0392b; }
         #main-content { grid-row: 2; grid-column: 1; background-color: var(--secondary-bg); overflow: auto; position: relative; }
-        /* CHANGE 3: Styles for the new welcome screen layout */
         #welcome-screen { display: flex; justify-content: center; align-items: center; gap: 40px; width: 100%; height: 100%; padding: 20px; box-sizing: border-box; }
         #initial-message { color: var(--light-text); text-align: left; max-width: 500px; font-size: 1.1em; }
         #initial-message a { color: var(--accent-color); text-decoration: none; }
@@ -87,7 +85,7 @@
 <body>
 
     <div id="app-container">
-        <!-- TOP PANEL (no longer collapsible) -->
+        <!-- TOP PANEL -->
         <div id="top-panel">
             <div id="top-panel-content">
                 <div class="input-group">
@@ -120,7 +118,6 @@
         <!-- MAIN PDF VIEWING AREA -->
         <main id="main-content">
             <div id="loader">Loading PDF Atlas...</div>
-            <!-- CHANGE 3: New welcome screen structure -->
             <div id="welcome-screen">
                 <div id="initial-message">
                     <h2>Welcome to the Bone Age Tool</h2>
@@ -131,7 +128,6 @@
                     </p>
                     <p style="font-size: 0.9em; color: #ccc; margin-top: 20px; line-height: 1.4;">
                         Please let me know if you have any further comments or suggestions for this tool. 
-                        <!-- CHANGE 5: Mailto link -->
                         (<a href="mailto:georgewpoulos@hotmail.com">georgewpoulos@hotmail.com</a>)
                     </p>
                 </div>
@@ -187,7 +183,7 @@
     </div>
 
 <script>
-// --- DATA (Embedded from your PDF analysis) ---
+// --- DATA ---
 const atlasIndex = [
   { "gender": "Male", "age": "Newborn (term)", "ageInMonths": 0, "pageAnnotated": 27, "pageUnannotated": 28 },
   { "gender": "Male", "age": "3 Months", "ageInMonths": 3, "pageAnnotated": 29, "pageUnannotated": 30 },
@@ -256,7 +252,7 @@ const standardDeviations = {
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM ELEMENT REFERENCES ---
     const dom = {
-        loader: document.getElementById('loader'), welcomeScreen: document.getElementById('welcome-screen'), initialMessage: document.getElementById('initial-message'), titlePageCanvas: document.getElementById('title-page-canvas'), pdfViewer: document.getElementById('pdf-viewer'), canvas: document.getElementById('pdf-canvas'), topPanel: document.getElementById('top-panel'), rightPanel: document.getElementById('right-panel'), rightPanelToggle: document.getElementById('right-panel-toggle'), genderToggle: document.getElementById('gender-toggle'), dobInput: document.getElementById('dob-input'), studyDateInput: document.getElementById('study-date-input'), chronoAgeOutput: document.getElementById('chrono-age-output'), sdOutput: document.getElementById('sd-output'), resetButton: document.getElementById('reset-button'), annotatedToggle: document.getElementById('annotated-toggle'), currentGender: document.getElementById('current-gender'), currentAge: document.getElementById('current-age'), prevAgeBtn: document.getElementById('prev-age'), nextAgeBtn: document.getElementById('next-age'), zoomOutBtn: document.getElementById('zoom-out'), zoomInBtn: document.getElementById('zoom-in'), zoomLevel: document.getElementById('zoom-level'), prevPageOverlay: document.getElementById('prev-page-overlay'), nextPageOverlay: document.getElementById('next-page-overlay'), mainContent: document.getElementById('main-content'), showDataBtn: document.getElementById('show-data-btn'), aboutBtn: document.getElementById('about-btn')
+        loader: document.getElementById('loader'), welcomeScreen: document.getElementById('welcome-screen'), titlePageCanvas: document.getElementById('title-page-canvas'), pdfViewer: document.getElementById('pdf-viewer'), canvas: document.getElementById('pdf-canvas'), rightPanel: document.getElementById('right-panel'), rightPanelToggle: document.getElementById('right-panel-toggle'), genderToggle: document.getElementById('gender-toggle'), dobInput: document.getElementById('dob-input'), studyDateInput: document.getElementById('study-date-input'), chronoAgeOutput: document.getElementById('chrono-age-output'), sdOutput: document.getElementById('sd-output'), resetButton: document.getElementById('reset-button'), annotatedToggle: document.getElementById('annotated-toggle'), currentGender: document.getElementById('current-gender'), currentAge: document.getElementById('current-age'), prevAgeBtn: document.getElementById('prev-age'), nextAgeBtn: document.getElementById('next-age'), zoomOutBtn: document.getElementById('zoom-out'), zoomInBtn: document.getElementById('zoom-in'), zoomLevel: document.getElementById('zoom-level'), prevPageOverlay: document.getElementById('prev-page-overlay'), nextPageOverlay: document.getElementById('next-page-overlay'), mainContent: document.getElementById('main-content'), showDataBtn: document.getElementById('show-data-btn'), aboutBtn: document.getElementById('about-btn')
     };
     const titleCtx = dom.titlePageCanvas.getContext('2d');
 
@@ -264,7 +260,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let state = {
         pdfDoc: null, currentPageNum: 1, currentAtlasEntryIndex: -1, zoom: 1.0, isAnnotated: false, patientGender: 'Male', isPanning: false, 
         panStart: { x: 0, y: 0, scrollLeft: 0, scrollTop: 0 }, 
-        isPatientDataEntered: false, lastViewedAtlasIndex: -1, lastPageBeforeInfo: 1
+        isPatientDataEntered: false, lastViewedAtlasPage: 1,
+        // CHANGE 2 & 3: New state for scroll ratio
+        scrollRatio: { x: 0.5, y: 0.5 }
     };
 
     const PDF_PATH = 'bone-age-atlas.pdf';
@@ -275,9 +273,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function findClosestSd(totalMonths, gender) { const data = (gender === 'Male') ? standardDeviations.boys : standardDeviations.girls; if (!data || data.length === 0) return null; let closest = data.reduce((prev, curr) => (Math.abs(curr.chronologicalMonths - totalMonths) < Math.abs(prev.chronologicalMonths - totalMonths) ? curr : prev)); return closest.sdMonths; }
     function findClosestAtlasIndex(totalMonths, gender) { const genderSpecificAtlas = atlasIndex.map((entry, index) => ({...entry, originalIndex: index})).filter(entry => entry.gender === gender); if (genderSpecificAtlas.length === 0) return -1; const closestEntry = genderSpecificAtlas.reduce((prev, curr) => (Math.abs(curr.ageInMonths - totalMonths) < Math.abs(prev.ageInMonths - totalMonths) ? curr : prev)); return closestEntry.originalIndex; }
 
+    // --- VIEW STATE MANAGEMENT ---
+    // CHANGE 2 & 3: Function to capture the current relative scroll position.
+    function captureScrollRatio() {
+        const { scrollLeft, scrollTop, scrollWidth, clientWidth, scrollHeight, clientHeight } = dom.mainContent;
+        // Avoid division by zero if not scrollable
+        const x = scrollWidth > clientWidth ? scrollLeft / (scrollWidth - clientWidth) : 0.5;
+        const y = scrollHeight > clientHeight ? scrollTop / (scrollHeight - clientHeight) : 0.5;
+        state.scrollRatio = { x, y };
+    }
+    
     // --- RENDERING AND NAVIGATION ---
-    async function renderPage(pageNum, scaleMode = 'zoom') {
-        if (!state.pdfDoc || pageNum < 1 || pageNum > state.pdfDoc.numPages) return;
+    async function renderPage(pageNum, scaleMode = 'zoom', applyScroll = true) {
+        if (!state.pdfDoc || pageNum < 1 || pageNum > state.pdfDoc.numPages) return Promise.reject("Invalid page number");
         
         dom.loader.style.display = 'block';
         dom.welcomeScreen.style.display = 'none';
@@ -295,9 +303,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const canvas = dom.canvas;
             canvas.height = viewport.height; canvas.width = viewport.width;
             const renderContext = { canvasContext: canvas.getContext('2d'), viewport: viewport };
+            
             await page.render(renderContext).promise;
+
             state.currentPageNum = pageNum;
             updateUiForCurrentPage();
+            
+            // CHANGE 2 & 3: Apply the stored scroll ratio after the new content is rendered
+            if (applyScroll) {
+                // Use a minimal timeout to allow the browser to update scroll dimensions
+                setTimeout(() => {
+                    const { scrollWidth, clientWidth, scrollHeight, clientHeight } = dom.mainContent;
+                    dom.mainContent.scrollLeft = state.scrollRatio.x * (scrollWidth - clientWidth);
+                    dom.mainContent.scrollTop = state.scrollRatio.y * (scrollHeight - clientHeight);
+                }, 0);
+            }
+            
         } catch (error) {
             console.error('Error rendering page:', error); dom.loader.textContent = 'Error loading page.';
         } finally {
@@ -307,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function navigateToAtlasIndex(index) { if (index < 0 || index >= atlasIndex.length) return; state.currentAtlasEntryIndex = index; const entry = atlasIndex[index]; const pageToRender = state.isAnnotated ? entry.pageAnnotated : entry.pageUnannotated; if(state.currentPageNum !== pageToRender) { renderPage(pageToRender); } else { updateUiForCurrentPage(); } }
-    function changeAge(direction) { if (state.currentAtlasEntryIndex === -1) return; const currentGender = atlasIndex[state.currentAtlasEntryIndex].gender; let nextIndex = state.currentAtlasEntryIndex + direction; while (nextIndex >= 0 && nextIndex < atlasIndex.length) { if (atlasIndex[nextIndex].gender === currentGender) { navigateToAtlasIndex(nextIndex); return; } nextIndex += direction; } }
+    function changeAge(direction) { captureScrollRatio(); if (state.currentAtlasEntryIndex === -1) return; const currentGender = atlasIndex[state.currentAtlasEntryIndex].gender; let nextIndex = state.currentAtlasEntryIndex + direction; while (nextIndex >= 0 && nextIndex < atlasIndex.length) { if (atlasIndex[nextIndex].gender === currentGender) { navigateToAtlasIndex(nextIndex); return; } nextIndex += direction; } }
 
     // --- UI UPDATES ---
     function updateUiForCurrentPage() {
@@ -332,7 +353,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         dom.showDataBtn.textContent = onDataPage ? 'Hide Brush Data' : 'Show Brush Data';
         dom.aboutBtn.textContent = onTitlePage ? 'Hide Reference' : 'About Reference';
-        // CHANGE 4: Hide data button on title page
         dom.showDataBtn.style.display = onTitlePage ? 'none' : 'block';
     }
 
@@ -343,11 +363,11 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.chronoAgeOutput.textContent = ''; dom.sdOutput.textContent = '';
             return;
         }
+        captureScrollRatio();
         state.isPatientDataEntered = true;
         const age = calculateChronologicalAge(dob, studyDate);
         if (age) {
             dom.chronoAgeOutput.textContent = `${age.years} years, ${age.months} months`;
-            // CHANGE 2: "Out of range" logic
             const sdTable = state.patientGender === 'Male' ? standardDeviations.boys : standardDeviations.girls;
             const maxAgeInTable = sdTable[sdTable.length - 1].chronologicalMonths;
             if (age.totalMonths > maxAgeInTable + 12) {
@@ -365,22 +385,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- EVENT LISTENERS ---
     dom.rightPanelToggle.addEventListener('click', () => dom.rightPanel.classList.toggle('collapsed'));
-    dom.genderToggle.addEventListener('click', () => { state.patientGender = (state.patientGender === 'Male') ? 'Female' : 'Male'; dom.genderToggle.textContent = state.patientGender; const genderClass = state.patientGender.toLowerCase(); dom.genderToggle.className = genderClass; dom.showDataBtn.className = `data-button ${genderClass}`; handlePatientDataUpdate(); });
+    dom.genderToggle.addEventListener('click', () => { captureScrollRatio(); state.patientGender = (state.patientGender === 'Male') ? 'Female' : 'Male'; dom.genderToggle.textContent = state.patientGender; const genderClass = state.patientGender.toLowerCase(); dom.genderToggle.className = genderClass; dom.showDataBtn.className = `data-button ${genderClass}`; handlePatientDataUpdate(); });
     dom.dobInput.addEventListener('input', (e) => { let input = e.target; let value = input.value.replace(/\D/g, ''); let formattedValue = ''; if (value.length > 4) { formattedValue = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4, 6)}`; } else if (value.length > 2) { formattedValue = `${value.slice(0, 2)}/${value.slice(2, 4)}`; } else { formattedValue = value; } input.value = formattedValue; handlePatientDataUpdate(); });
     dom.studyDateInput.addEventListener('change', handlePatientDataUpdate);
     dom.resetButton.addEventListener('click', () => { dom.dobInput.value = ''; setDefaultStudyDate(); state.patientGender = 'Male'; dom.genderToggle.textContent = 'Male'; dom.genderToggle.className = 'male'; dom.showDataBtn.className = 'data-button male'; dom.annotatedToggle.checked = false; state.isAnnotated = false; state.zoom = 1.0; state.isPatientDataEntered = false; handlePatientDataUpdate(); dom.welcomeScreen.style.display = 'flex'; dom.pdfViewer.style.display = 'none'; updateUiForCurrentPage(); });
-    dom.annotatedToggle.addEventListener('change', (e) => { state.isAnnotated = e.target.checked; if (state.currentAtlasEntryIndex !== -1) navigateToAtlasIndex(state.currentAtlasEntryIndex); });
+    dom.annotatedToggle.addEventListener('change', (e) => { captureScrollRatio(); state.isAnnotated = e.target.checked; if (state.currentAtlasEntryIndex !== -1) navigateToAtlasIndex(state.currentAtlasEntryIndex); });
     dom.prevAgeBtn.addEventListener('click', () => changeAge(-1)); dom.nextAgeBtn.addEventListener('click', () => changeAge(1));
     dom.prevPageOverlay.addEventListener('click', () => changeAge(-1)); dom.nextPageOverlay.addEventListener('click', () => changeAge(1));
-    dom.showDataBtn.addEventListener('click', () => { if (dom.showDataBtn.textContent.includes('Show')) { state.lastViewedAtlasIndex = state.currentAtlasEntryIndex > -1 ? state.currentAtlasEntryIndex : state.lastViewedAtlasIndex; const page = state.patientGender === 'Male' ? 21 : 22; renderPage(page); } else { navigateToAtlasIndex(state.lastViewedAtlasIndex); } });
-    dom.aboutBtn.addEventListener('click', () => { if (dom.aboutBtn.textContent.includes('About')) { state.lastPageBeforeInfo = state.currentPageNum; renderPage(1, 'fit'); } else { const lastPage = state.lastPageBeforeInfo; const scaleMode = (lastPage === 1) ? 'fit' : 'zoom'; renderPage(lastPage, scaleMode); } });
-    function handleZoom(factor) { if (state.currentPageNum === 1) return; state.zoom = Math.max(0.2, Math.min(5, state.zoom * factor)); renderPage(state.currentPageNum); }
-    dom.zoomInBtn.addEventListener('click', () => handleZoom(1.2)); dom.zoomOutBtn.addEventListener('click', () => handleZoom(0.8));
-    dom.mainContent.addEventListener('wheel', e => { e.preventDefault(); handleZoom(e.deltaY < 0 ? 1.1 : 0.9); });
+    dom.showDataBtn.addEventListener('click', () => { captureScrollRatio(); if (dom.showDataBtn.textContent.includes('Show')) { state.lastViewedAtlasPage = state.currentPageNum; const page = state.patientGender === 'Male' ? 21 : 22; renderPage(page); } else { renderPage(state.lastViewedAtlasPage); } });
+    dom.aboutBtn.addEventListener('click', () => { captureScrollRatio(); if (dom.aboutBtn.textContent.includes('About')) { state.lastViewedAtlasPage = state.currentPageNum; renderPage(1, 'fit', false); } else { renderPage(state.lastViewedAtlasPage, 'zoom'); } });
+    
+    // CHANGE 1: New unified zoom function
+    async function applyZoom(factor, origin = null) {
+        if (state.currentPageNum === 1) return;
+        const mainContent = dom.mainContent;
+        if (!origin) { // For button clicks
+            const rect = mainContent.getBoundingClientRect();
+            origin = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        }
+        
+        const oldZoom = state.zoom;
+        const newZoom = Math.max(0.2, Math.min(5, oldZoom * factor));
+        
+        // Point on image before zoom, relative to the un-zoomed image
+        const pointX = (mainContent.scrollLeft + origin.x - mainContent.getBoundingClientRect().left) / oldZoom;
+        const pointY = (mainContent.scrollTop + origin.y - mainContent.getBoundingClientRect().top) / oldZoom;
+
+        state.zoom = newZoom;
+        await renderPage(state.currentPageNum, 'zoom', false); // Render without applying scroll ratio
+
+        // Calculate new scroll position to keep the point under the cursor
+        mainContent.scrollLeft = pointX * newZoom - (origin.x - mainContent.getBoundingClientRect().left);
+        mainContent.scrollTop = pointY * newZoom - (origin.y - mainContent.getBoundingClientRect().top);
+        
+        updateUiForCurrentPage();
+    }
+    
+    dom.zoomInBtn.addEventListener('click', () => applyZoom(1.2)); dom.zoomOutBtn.addEventListener('click', () => applyZoom(0.8));
+    dom.mainContent.addEventListener('wheel', e => { e.preventDefault(); applyZoom(e.deltaY < 0 ? 1.1 : 0.9, { x: e.clientX, y: e.clientY }); });
     dom.mainContent.addEventListener('mousedown', e => { if (e.target.id !== 'pdf-canvas') return; e.preventDefault(); state.isPanning = true; state.panStart = { scrollLeft: dom.mainContent.scrollLeft, scrollTop: dom.mainContent.scrollTop, x: e.clientX, y: e.clientY, }; dom.pdfViewer.classList.add('grabbing'); });
     window.addEventListener('mouseup', () => { if (state.isPanning) { state.isPanning = false; dom.pdfViewer.classList.remove('grabbing'); } });
     window.addEventListener('mousemove', e => { if (!state.isPanning) return; e.preventDefault(); const dx = e.clientX - state.panStart.x; const dy = e.clientY - state.panStart.y; dom.mainContent.scrollLeft = state.panStart.scrollLeft - dx; dom.mainContent.scrollTop = state.panStart.scrollTop - dy; });
-    window.addEventListener('keydown', e => { if (document.activeElement.tagName === 'INPUT') return; if (!state.isPatientDataEntered) return; const key = e.key; if (key === 'ArrowLeft' || key === 'ArrowRight') { e.preventDefault(); changeAge(key === 'ArrowLeft' ? -1 : 1); } else if (key === '+' || key === '=' || key === '-') { e.preventDefault(); handleZoom(key === '-' ? 0.8 : 1.2); } });
+    window.addEventListener('keydown', e => { if (document.activeElement.tagName === 'INPUT') return; const key = e.key; if (state.isPatientDataEntered) { if (key === 'ArrowLeft' || key === 'ArrowRight') { e.preventDefault(); changeAge(key === 'ArrowLeft' ? -1 : 1); } else if (key === '+' || key === '=' || key === '-') { e.preventDefault(); applyZoom(key === '-' ? 0.8 : 1.2); } } });
 
     // --- INITIALIZATION ---
     function setDefaultStudyDate() { const today = new Date(); const yyyy = today.getFullYear(); const mm = String(today.getMonth() + 1).padStart(2, '0'); const dd = String(today.getDate()).padStart(2, '0'); dom.studyDateInput.value = `${yyyy}-${mm}-${dd}`; }
@@ -390,13 +436,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const loadingTask = pdfjsLib.getDocument(PDF_PATH);
             state.pdfDoc = await loadingTask.promise;
             dom.loader.style.display = 'none';
-            // CHANGE 3: Render title page to its own canvas on startup
             const page = await state.pdfDoc.getPage(1);
             const viewport = page.getViewport({ scale: 1 });
             const scale = dom.titlePageCanvas.parentElement.clientHeight / viewport.height * 0.9;
             const scaledViewport = page.getViewport({ scale: scale });
-            dom.titlePageCanvas.height = scaledViewport.height;
-            dom.titlePageCanvas.width = scaledViewport.width;
+            dom.titlePageCanvas.height = scaledViewport.height; dom.titlePageCanvas.width = scaledViewport.width;
             await page.render({ canvasContext: titleCtx, viewport: scaledViewport }).promise;
             dom.welcomeScreen.style.display = 'flex';
             dom.pdfViewer.style.display = 'none';
