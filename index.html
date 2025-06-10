@@ -195,13 +195,13 @@
 
         <!-- RIGHT COLLAPSIBLE PANEL -->
         <aside id="right-panel" class="collapsed">
-            <div id="right-panel-toggle"><span class="arrow">◄</span></div>
+            <!-- CHANGE 1: Arrow character changed to point right when open -->
+            <div id="right-panel-toggle"><span class="arrow">►</span></div>
             <div id="right-panel-container">
                 <div id="right-panel-content">
                     <div class="nav-group">
                         <label>View Options</label>
                         <div class="control-row">
-                            <!-- CHANGE 1: Text changed -->
                             <span>Annotations</span>
                             <label class="switch">
                                 <input type="checkbox" id="annotated-toggle">
@@ -437,7 +437,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const closestIndex = findClosestAtlasIndex(age.totalMonths, state.patientGender);
             if(closestIndex !== -1) { 
-                // CHANGE 2: Pass 'true' to expand panel on first data entry
                 navigateToAtlasIndex(closestIndex, true); 
             }
         } else {
