@@ -31,7 +31,6 @@
         }
         #app-container { display: grid; grid-template-rows: auto 1fr; grid-template-columns: 1fr auto; height: 100vh; width: 100vw; }
         
-        /* CHANGE 1: Collapsible Top Panel Logic */
         #top-panel { 
             grid-column: 1 / -1; background-color: var(--panel-bg); border-bottom: 2px solid var(--border-color); position: relative; z-index: 100; box-shadow: 0 4px 12px var(--shadow-color);
             transition: max-height 0.4s ease-in-out;
@@ -58,7 +57,12 @@
         #top-panel-toggle .arrow { transition: transform 0.3s; }
         #top-panel.collapsed .arrow { transform: rotate(180deg); }
 
-        #top-panel-content { display: flex; justify-content: space-around; align-items: center; padding: 15px 20px; gap: 20px; flex-wrap: wrap; }
+        /* CHANGE 2: Add padding to bottom of content to make space for the absolute toggle */
+        #top-panel-content { 
+            display: flex; justify-content: space-around; align-items: center; padding: 15px 20px; gap: 20px; flex-wrap: wrap; 
+            padding-bottom: 40px; 
+            box-sizing: border-box;
+        }
         .input-group, .output-group { display: flex; flex-direction: column; gap: 5px; }
         .input-group label, .output-group .label { font-weight: 600; font-size: 0.9em; color: #555; }
         .input-group input, .input-group button { padding: 8px 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; font-family: inherit; outline-color: var(--accent-color); }
@@ -77,8 +81,6 @@
         #pdf-viewer { position: relative; cursor: grab; width: fit-content; margin: 20px auto; }
         #pdf-viewer.grabbing { cursor: grabbing; }
         #pdf-canvas { display: block; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-
-        /* CHANGE 1: Collapsible Right Panel Logic */
         #right-panel {
             grid-row: 2; grid-column: 2; background-color: var(--panel-bg); border-left: 2px solid var(--border-color); width: auto; position: relative; z-index: 50; overflow: hidden; display: flex; flex-direction: row;
             transition: max-width 0.4s ease-in-out;
@@ -131,7 +133,8 @@
 
     <div id="app-container">
         <!-- TOP COLLAPSIBLE PANEL -->
-        <div id="top-panel" class="collapsed">
+        <!-- CHANGE 1: Removed 'collapsed' class to have it open by default -->
+        <div id="top-panel">
             <div id="top-panel-content">
                 <div class="input-group">
                     <label for="gender-toggle">Patient Gender</label>
@@ -158,8 +161,7 @@
                     <button id="reset-button">Reset</button>
                 </div>
             </div>
-            <!-- CHANGE 1: New Toggle button for top panel -->
-            <div id="top-panel-toggle"><span class="arrow">▼</span></div>
+            <div id="top-panel-toggle"><span class="arrow">▲</span></div>
         </div>
 
         <!-- MAIN PDF VIEWING AREA -->
@@ -189,7 +191,6 @@
 
         <!-- RIGHT COLLAPSIBLE PANEL -->
         <aside id="right-panel" class="collapsed">
-            <!-- CHANGE 1: Restructured right panel for collapse -->
             <div id="right-panel-toggle"><span class="arrow">Navigation</span></div>
             <div id="right-panel-container">
                 <div id="right-panel-content">
