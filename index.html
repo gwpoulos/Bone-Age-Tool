@@ -99,7 +99,6 @@
             justify-content: center;
             align-items: center;
         }
-        /* CHANGE 1: Adjusted CSS for right panel arrow */
         #right-panel-toggle .arrow { 
             font-size: 1.5em;
             line-height: 1;
@@ -202,7 +201,8 @@
                     <div class="nav-group">
                         <label>View Options</label>
                         <div class="control-row">
-                            <span>Annotated X-Ray</span>
+                            <!-- CHANGE 1: Text changed -->
+                            <span>Annotations</span>
                             <label class="switch">
                                 <input type="checkbox" id="annotated-toggle">
                                 <span class="slider"></span>
@@ -373,7 +373,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function navigateToAtlasIndex(index) { if (index < 0 || index >= atlasIndex.length) return; dom.rightPanel.classList.remove('collapsed'); state.currentAtlasEntryIndex = index; const entry = atlasIndex[index]; const pageToRender = state.isAnnotated ? entry.pageAnnotated : entry.pageUnannotated; if(state.currentPageNum !== pageToRender) { renderPage(pageToRender); } else { updateUiForCurrentPage(); } }
+    function navigateToAtlasIndex(index, expandPanel = false) { 
+        if (index < 0 || index >= atlasIndex.length) return; 
+        if (expandPanel) {
+            dom.rightPanel.classList.remove('collapsed');
+        }
+        state.currentAtlasEntryIndex = index; 
+        const entry = atlasIndex[index]; 
+        const pageToRender = state.isAnnotated ? entry.pageAnnotated : entry.pageUnannotated; 
+        if(state.currentPageNum !== pageToRender) { 
+            renderPage(pageToRender); 
+        } else { 
+            updateUiForCurrentPage(); 
+        } 
+    }
+    
     function changeAge(direction) { captureScrollRatio(); if (state.currentAtlasEntryIndex === -1) return; const currentGender = atlasIndex[state.currentAtlasEntryIndex].gender; let nextIndex = state.currentAtlasEntryIndex + direction; while (nextIndex >= 0 && nextIndex < atlasIndex.length) { if (atlasIndex[nextIndex].gender === currentGender) { navigateToAtlasIndex(nextIndex); return; } nextIndex += direction; } }
 
     // --- UI UPDATES ---
@@ -422,7 +436,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom.sdOutput.textContent = sd ? `± ${sd} months` : 'N/A';
             }
             const closestIndex = findClosestAtlasIndex(age.totalMonths, state.patientGender);
-            if(closestIndex !== -1) { navigateToAtlasIndex(closestIndex); }
+            if(closestIndex !== -1) { 
+                // CHANGE 2: Pass 'true' to expand panel on first data entry
+                navigateToAtlasIndex(closestIndex, true); 
+            }
         } else {
             dom.chronoAgeOutput.textContent = 'Invalid Date'; dom.sdOutput.textContent = '';
         }
@@ -438,8 +455,8 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.annotatedToggle.addEventListener('change', (e) => { captureScrollRatio(); state.isAnnotated = e.target.checked; if (state.currentAtlasEntryIndex !== -1) navigateToAtlasIndex(state.currentAtlasEntryIndex); });
     dom.prevAgeBtn.addEventListener('click', () => changeAge(-1)); dom.nextAgeBtn.addEventListener('click', () => changeAge(1));
     dom.prevPageOverlay.addEventListener('click', () => changeAge(-1)); dom.nextPageOverlay.addEventListener('click', () => changeAge(1));
-    dom.showDataBtn.addEventListener('click', () => { captureScrollRatio(); if (dom.showDataBtn.textContent.includes('Show')) { dom.rightPanel.classList.remove('collapsed'); state.lastViewedAtlasPage = state.currentPageNum; const page = state.patientGender === 'Male' ? 21 : 22; renderPage(page); } else { renderPage(state.lastViewedAtlasPage); } });
-    dom.aboutBtn.addEventListener('click', () => { captureScrollRatio(); if (dom.aboutBtn.textContent.includes('About')) { dom.rightPanel.classList.remove('collapsed'); state.lastViewedAtlasPage = state.currentPageNum; renderPage(1, 'fit', false); } else { const lastPage = state.lastViewedAtlasPage; renderPage(lastPage, 'zoom'); } });
+    dom.showDataBtn.addEventListener('click', () => { dom.rightPanel.classList.remove('collapsed'); captureScrollRatio(); if (dom.showDataBtn.textContent.includes('Show')) { state.lastViewedAtlasPage = state.currentPageNum; const page = state.patientGender === 'Male' ? 21 : 22; renderPage(page); } else { renderPage(state.lastViewedAtlasPage); } });
+    dom.aboutBtn.addEventListener('click', () => { dom.rightPanel.classList.remove('collapsed'); captureScrollRatio(); if (dom.aboutBtn.textContent.includes('About')) { state.lastViewedAtlasPage = state.currentPageNum; renderPage(1, 'fit', false); } else { const lastPage = state.lastViewedAtlasPage; renderPage(lastPage, 'zoom'); } });
     
     async function applyZoom(factor, origin = null) {
         if (state.currentPageNum === 1) return;
