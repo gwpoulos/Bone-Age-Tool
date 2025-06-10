@@ -30,7 +30,34 @@
             margin: 0; padding: 0; height: 100%; width: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: var(--primary-bg); overflow: hidden; color: var(--text-color);
         }
         #app-container { display: grid; grid-template-rows: auto 1fr; grid-template-columns: 1fr auto; height: 100vh; width: 100vw; }
-        #top-panel { grid-column: 1 / -1; background-color: var(--panel-bg); border-bottom: 2px solid var(--border-color); position: relative; z-index: 100; box-shadow: 0 4px 12px var(--shadow-color); }
+        
+        /* CHANGE 1: Collapsible Top Panel Logic */
+        #top-panel { 
+            grid-column: 1 / -1; background-color: var(--panel-bg); border-bottom: 2px solid var(--border-color); position: relative; z-index: 100; box-shadow: 0 4px 12px var(--shadow-color);
+            transition: max-height 0.4s ease-in-out;
+            max-height: 200px; /* Ample space when open */
+            overflow: hidden;
+        }
+        #top-panel.collapsed {
+            max-height: 32px; /* Height of the toggle bar */
+        }
+        #top-panel-toggle {
+            position: absolute;
+            bottom: 0;
+            left: 0; right: 0;
+            height: 30px;
+            background-color: var(--panel-bg);
+            border-top: 2px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        #top-panel-toggle .arrow { transition: transform 0.3s; }
+        #top-panel.collapsed .arrow { transform: rotate(180deg); }
+
         #top-panel-content { display: flex; justify-content: space-around; align-items: center; padding: 15px 20px; gap: 20px; flex-wrap: wrap; }
         .input-group, .output-group { display: flex; flex-direction: column; gap: 5px; }
         .input-group label, .output-group .label { font-weight: 600; font-size: 0.9em; color: #555; }
@@ -50,12 +77,30 @@
         #pdf-viewer { position: relative; cursor: grab; width: fit-content; margin: 20px auto; }
         #pdf-viewer.grabbing { cursor: grabbing; }
         #pdf-canvas { display: block; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        #right-panel { grid-row: 2; grid-column: 2; background-color: var(--panel-bg); border-left: 2px solid var(--border-color); width: 280px; position: relative; transition: transform 0.3s ease-in-out; z-index: 50; overflow-y: auto; display: flex; flex-direction: column; }
-        #right-panel.collapsed { transform: translateX(calc(100% - 40px)); }
-        #right-panel-toggle { position: absolute; top: 50%; left: -2px; transform: translate(-100%, -50%); background-color: var(--panel-bg); border: 2px solid var(--border-color); border-right: none; border-radius: 10px 0 0 10px; padding: 20px 5px; cursor: pointer; transition: background-color 0.2s; }
-        #right-panel-toggle:hover { background-color: #e9ecef; }
-        #right-panel-toggle .arrow { display: inline-block; transition: transform 0.3s; writing-mode: vertical-rl; font-weight: bold; }
+
+        /* CHANGE 1: Collapsible Right Panel Logic */
+        #right-panel {
+            grid-row: 2; grid-column: 2; background-color: var(--panel-bg); border-left: 2px solid var(--border-color); width: auto; position: relative; z-index: 50; overflow: hidden; display: flex; flex-direction: row;
+            transition: max-width 0.4s ease-in-out;
+            max-width: 280px;
+        }
+        #right-panel.collapsed {
+            max-width: 32px;
+        }
+        #right-panel-toggle {
+            height: 100%;
+            width: 30px;
+            background-color: var(--panel-bg);
+            border-right: 2px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #right-panel-toggle .arrow { writing-mode: vertical-rl; font-weight: bold; transform-origin: center; transition: transform 0.3s; }
         #right-panel.collapsed .arrow { transform: rotate(180deg); }
+
+        #right-panel-container { min-width: 248px; display: flex; flex-direction: column; }
         #right-panel-content { padding: 20px; display: flex; flex-direction: column; gap: 20px; flex-grow: 1; }
         .nav-group { border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
         .nav-group:last-child { border-bottom: none; }
@@ -85,8 +130,8 @@
 <body>
 
     <div id="app-container">
-        <!-- TOP PANEL -->
-        <div id="top-panel">
+        <!-- TOP COLLAPSIBLE PANEL -->
+        <div id="top-panel" class="collapsed">
             <div id="top-panel-content">
                 <div class="input-group">
                     <label for="gender-toggle">Patient Gender</label>
@@ -113,6 +158,8 @@
                     <button id="reset-button">Reset</button>
                 </div>
             </div>
+            <!-- CHANGE 1: New Toggle button for top panel -->
+            <div id="top-panel-toggle"><span class="arrow">▼</span></div>
         </div>
 
         <!-- MAIN PDF VIEWING AREA -->
@@ -142,43 +189,46 @@
 
         <!-- RIGHT COLLAPSIBLE PANEL -->
         <aside id="right-panel" class="collapsed">
-            <div id="right-panel-content">
-                <div class="nav-group">
-                    <label>View Options</label>
-                    <div class="control-row">
-                        <span>Annotated X-Ray</span>
-                        <label class="switch">
-                            <input type="checkbox" id="annotated-toggle">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-                <div class="nav-group">
-                    <label>Current Standard</label>
-                    <div class="control-row" style="margin-bottom: 10px;">
-                        <span>Gender:</span>
-                        <span id="current-gender">-</span>
-                    </div>
-                    <div class="control-row">
-                        <button id="prev-age">-</button>
-                        <span id="current-age">-</span>
-                        <button id="next-age">+</button>
-                    </div>
-                </div>
-                <div class="nav-group">
-                    <label>Zoom</label>
-                    <div class="control-row">
-                        <button id="zoom-out">-</button>
-                        <span id="zoom-level">100%</span>
-                        <button id="zoom-in">+</button>
-                    </div>
-                </div>
-            </div>
-            <div style="padding: 0 20px 20px 20px; display: flex; flex-direction: column; gap: 10px;">
-                 <button id="show-data-btn" class="data-button male">Show Brush Data</button>
-                 <button id="about-btn" class="data-button neutral">About Reference</button>
-            </div>
+            <!-- CHANGE 1: Restructured right panel for collapse -->
             <div id="right-panel-toggle"><span class="arrow">Navigation</span></div>
+            <div id="right-panel-container">
+                <div id="right-panel-content">
+                    <div class="nav-group">
+                        <label>View Options</label>
+                        <div class="control-row">
+                            <span>Annotated X-Ray</span>
+                            <label class="switch">
+                                <input type="checkbox" id="annotated-toggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="nav-group">
+                        <label>Current Standard</label>
+                        <div class="control-row" style="margin-bottom: 10px;">
+                            <span>Gender:</span>
+                            <span id="current-gender">-</span>
+                        </div>
+                        <div class="control-row">
+                            <button id="prev-age">-</button>
+                            <span id="current-age">-</span>
+                            <button id="next-age">+</button>
+                        </div>
+                    </div>
+                    <div class="nav-group">
+                        <label>Zoom</label>
+                        <div class="control-row">
+                            <button id="zoom-out">-</button>
+                            <span id="zoom-level">100%</span>
+                            <button id="zoom-in">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div style="padding: 0 20px 20px 20px; display: flex; flex-direction: column; gap: 10px;">
+                     <button id="show-data-btn" class="data-button male">Show Brush Data</button>
+                     <button id="about-btn" class="data-button neutral">About Reference</button>
+                </div>
+            </div>
         </aside>
     </div>
 
@@ -252,17 +302,16 @@ const standardDeviations = {
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM ELEMENT REFERENCES ---
     const dom = {
-        loader: document.getElementById('loader'), welcomeScreen: document.getElementById('welcome-screen'), titlePageCanvas: document.getElementById('title-page-canvas'), pdfViewer: document.getElementById('pdf-viewer'), canvas: document.getElementById('pdf-canvas'), rightPanel: document.getElementById('right-panel'), rightPanelToggle: document.getElementById('right-panel-toggle'), genderToggle: document.getElementById('gender-toggle'), dobInput: document.getElementById('dob-input'), studyDateInput: document.getElementById('study-date-input'), chronoAgeOutput: document.getElementById('chrono-age-output'), sdOutput: document.getElementById('sd-output'), resetButton: document.getElementById('reset-button'), annotatedToggle: document.getElementById('annotated-toggle'), currentGender: document.getElementById('current-gender'), currentAge: document.getElementById('current-age'), prevAgeBtn: document.getElementById('prev-age'), nextAgeBtn: document.getElementById('next-age'), zoomOutBtn: document.getElementById('zoom-out'), zoomInBtn: document.getElementById('zoom-in'), zoomLevel: document.getElementById('zoom-level'), prevPageOverlay: document.getElementById('prev-page-overlay'), nextPageOverlay: document.getElementById('next-page-overlay'), mainContent: document.getElementById('main-content'), showDataBtn: document.getElementById('show-data-btn'), aboutBtn: document.getElementById('about-btn')
+        loader: document.getElementById('loader'), welcomeScreen: document.getElementById('welcome-screen'), titlePageCanvas: document.getElementById('title-page-canvas'), pdfViewer: document.getElementById('pdf-viewer'), canvas: document.getElementById('pdf-canvas'), topPanel: document.getElementById('top-panel'), topPanelToggle: document.getElementById('top-panel-toggle'), rightPanel: document.getElementById('right-panel'), rightPanelToggle: document.getElementById('right-panel-toggle'), genderToggle: document.getElementById('gender-toggle'), dobInput: document.getElementById('dob-input'), studyDateInput: document.getElementById('study-date-input'), chronoAgeOutput: document.getElementById('chrono-age-output'), sdOutput: document.getElementById('sd-output'), resetButton: document.getElementById('reset-button'), annotatedToggle: document.getElementById('annotated-toggle'), currentGender: document.getElementById('current-gender'), currentAge: document.getElementById('current-age'), prevAgeBtn: document.getElementById('prev-age'), nextAgeBtn: document.getElementById('next-age'), zoomOutBtn: document.getElementById('zoom-out'), zoomInBtn: document.getElementById('zoom-in'), zoomLevel: document.getElementById('zoom-level'), prevPageOverlay: document.getElementById('prev-page-overlay'), nextPageOverlay: document.getElementById('next-page-overlay'), mainContent: document.getElementById('main-content'), showDataBtn: document.getElementById('show-data-btn'), aboutBtn: document.getElementById('about-btn')
     };
     const titleCtx = dom.titlePageCanvas.getContext('2d');
+    const mainCtx = dom.canvas.getContext('2d');
 
     // --- APPLICATION STATE ---
     let state = {
         pdfDoc: null, currentPageNum: 1, currentAtlasEntryIndex: -1, zoom: 1.0, isAnnotated: false, patientGender: 'Male', isPanning: false, 
         panStart: { x: 0, y: 0, scrollLeft: 0, scrollTop: 0 }, 
-        isPatientDataEntered: false, lastViewedAtlasPage: 1,
-        // CHANGE 2 & 3: New state for scroll ratio
-        scrollRatio: { x: 0.5, y: 0.5 }
+        isPatientDataEntered: false, lastViewedAtlasPage: 1, scrollRatio: { x: 0.5, y: 0.5 }
     };
 
     const PDF_PATH = 'bone-age-atlas.pdf';
@@ -274,14 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function findClosestAtlasIndex(totalMonths, gender) { const genderSpecificAtlas = atlasIndex.map((entry, index) => ({...entry, originalIndex: index})).filter(entry => entry.gender === gender); if (genderSpecificAtlas.length === 0) return -1; const closestEntry = genderSpecificAtlas.reduce((prev, curr) => (Math.abs(curr.ageInMonths - totalMonths) < Math.abs(prev.ageInMonths - totalMonths) ? curr : prev)); return closestEntry.originalIndex; }
 
     // --- VIEW STATE MANAGEMENT ---
-    // CHANGE 2 & 3: Function to capture the current relative scroll position.
-    function captureScrollRatio() {
-        const { scrollLeft, scrollTop, scrollWidth, clientWidth, scrollHeight, clientHeight } = dom.mainContent;
-        // Avoid division by zero if not scrollable
-        const x = scrollWidth > clientWidth ? scrollLeft / (scrollWidth - clientWidth) : 0.5;
-        const y = scrollHeight > clientHeight ? scrollTop / (scrollHeight - clientHeight) : 0.5;
-        state.scrollRatio = { x, y };
-    }
+    function captureScrollRatio() { const { scrollLeft, scrollTop, scrollWidth, clientWidth, scrollHeight, clientHeight } = dom.mainContent; const x = scrollWidth > clientWidth ? scrollLeft / (scrollWidth - clientWidth) : 0.5; const y = scrollHeight > clientHeight ? scrollTop / (scrollHeight - clientHeight) : 0.5; state.scrollRatio = { x, y }; }
     
     // --- RENDERING AND NAVIGATION ---
     async function renderPage(pageNum, scaleMode = 'zoom', applyScroll = true) {
@@ -302,16 +344,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const viewport = page.getViewport({ scale: scale });
             const canvas = dom.canvas;
             canvas.height = viewport.height; canvas.width = viewport.width;
-            const renderContext = { canvasContext: canvas.getContext('2d'), viewport: viewport };
+            const renderContext = { canvasContext: mainCtx, viewport: viewport };
             
             await page.render(renderContext).promise;
 
             state.currentPageNum = pageNum;
             updateUiForCurrentPage();
             
-            // CHANGE 2 & 3: Apply the stored scroll ratio after the new content is rendered
             if (applyScroll) {
-                // Use a minimal timeout to allow the browser to update scroll dimensions
                 setTimeout(() => {
                     const { scrollWidth, clientWidth, scrollHeight, clientHeight } = dom.mainContent;
                     dom.mainContent.scrollLeft = state.scrollRatio.x * (scrollWidth - clientWidth);
@@ -363,7 +403,6 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.chronoAgeOutput.textContent = ''; dom.sdOutput.textContent = '';
             return;
         }
-        captureScrollRatio();
         state.isPatientDataEntered = true;
         const age = calculateChronologicalAge(dob, studyDate);
         if (age) {
@@ -384,6 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- EVENT LISTENERS ---
+    dom.topPanelToggle.addEventListener('click', () => dom.topPanel.classList.toggle('collapsed'));
     dom.rightPanelToggle.addEventListener('click', () => dom.rightPanel.classList.toggle('collapsed'));
     dom.genderToggle.addEventListener('click', () => { captureScrollRatio(); state.patientGender = (state.patientGender === 'Male') ? 'Female' : 'Male'; dom.genderToggle.textContent = state.patientGender; const genderClass = state.patientGender.toLowerCase(); dom.genderToggle.className = genderClass; dom.showDataBtn.className = `data-button ${genderClass}`; handlePatientDataUpdate(); });
     dom.dobInput.addEventListener('input', (e) => { let input = e.target; let value = input.value.replace(/\D/g, ''); let formattedValue = ''; if (value.length > 4) { formattedValue = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4, 6)}`; } else if (value.length > 2) { formattedValue = `${value.slice(0, 2)}/${value.slice(2, 4)}`; } else { formattedValue = value; } input.value = formattedValue; handlePatientDataUpdate(); });
@@ -393,31 +433,22 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.prevAgeBtn.addEventListener('click', () => changeAge(-1)); dom.nextAgeBtn.addEventListener('click', () => changeAge(1));
     dom.prevPageOverlay.addEventListener('click', () => changeAge(-1)); dom.nextPageOverlay.addEventListener('click', () => changeAge(1));
     dom.showDataBtn.addEventListener('click', () => { captureScrollRatio(); if (dom.showDataBtn.textContent.includes('Show')) { state.lastViewedAtlasPage = state.currentPageNum; const page = state.patientGender === 'Male' ? 21 : 22; renderPage(page); } else { renderPage(state.lastViewedAtlasPage); } });
-    dom.aboutBtn.addEventListener('click', () => { captureScrollRatio(); if (dom.aboutBtn.textContent.includes('About')) { state.lastViewedAtlasPage = state.currentPageNum; renderPage(1, 'fit', false); } else { renderPage(state.lastViewedAtlasPage, 'zoom'); } });
+    dom.aboutBtn.addEventListener('click', () => { captureScrollRatio(); if (dom.aboutBtn.textContent.includes('About')) { state.lastViewedAtlasPage = state.currentPageNum; renderPage(1, 'fit', false); } else { const lastPage = state.lastViewedAtlasPage; renderPage(lastPage, 'zoom'); } });
     
-    // CHANGE 1: New unified zoom function
     async function applyZoom(factor, origin = null) {
         if (state.currentPageNum === 1) return;
         const mainContent = dom.mainContent;
-        if (!origin) { // For button clicks
-            const rect = mainContent.getBoundingClientRect();
-            origin = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-        }
-        
+        if (!origin) { const rect = mainContent.getBoundingClientRect(); origin = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }; }
+        captureScrollRatio();
         const oldZoom = state.zoom;
         const newZoom = Math.max(0.2, Math.min(5, oldZoom * factor));
-        
-        // Point on image before zoom, relative to the un-zoomed image
         const pointX = (mainContent.scrollLeft + origin.x - mainContent.getBoundingClientRect().left) / oldZoom;
         const pointY = (mainContent.scrollTop + origin.y - mainContent.getBoundingClientRect().top) / oldZoom;
 
         state.zoom = newZoom;
-        await renderPage(state.currentPageNum, 'zoom', false); // Render without applying scroll ratio
-
-        // Calculate new scroll position to keep the point under the cursor
+        await renderPage(state.currentPageNum, 'zoom', false);
         mainContent.scrollLeft = pointX * newZoom - (origin.x - mainContent.getBoundingClientRect().left);
         mainContent.scrollTop = pointY * newZoom - (origin.y - mainContent.getBoundingClientRect().top);
-        
         updateUiForCurrentPage();
     }
     
@@ -444,7 +475,6 @@ document.addEventListener('DOMContentLoaded', () => {
             await page.render({ canvasContext: titleCtx, viewport: scaledViewport }).promise;
             dom.welcomeScreen.style.display = 'flex';
             dom.pdfViewer.style.display = 'none';
-
         } catch (error) {
             dom.loader.textContent = 'Error: Could not load "bone-age-atlas.pdf". Make sure it is in the same folder as this HTML file.';
             console.error(error);
