@@ -13,17 +13,18 @@
     </script>
 
     <style>
+        /* CHANGE: New Dark Mode Color Palette */
         :root {
-            --primary-bg: #2c3e50;
-            --secondary-bg: #34495e;
-            --panel-bg: #f8f9fa;
-            --text-color: #333;
-            --light-text: #ecf0f1;
-            --border-color: #dee2e6;
+            --primary-bg: #212529;      /* Page background */
+            --secondary-bg: #2c3e50;    /* PDF viewer area background */
+            --panel-bg: #34495e;        /* Top/Right panel background */
+            --text-color: #ecf0f1;      /* Primary light text */
+            --text-secondary: #bdc3c7;  /* Secondary light text (for labels) */
+            --border-color: #4a627a;    /* Darker border color */
             --male-color: #3498db;
             --female-color: #e91e63;
             --accent-color: #1abc9c;
-            --shadow-color: rgba(0, 0, 0, 0.2);
+            --shadow-color: rgba(0, 0, 0, 0.4);
             --neutral-color: #7f8c8d;
         }
         html, body {
@@ -34,11 +35,11 @@
         #top-panel { 
             grid-column: 1 / -1; background-color: var(--panel-bg); border-bottom: 2px solid var(--border-color); position: relative; z-index: 100; box-shadow: 0 4px 12px var(--shadow-color);
             transition: max-height 0.4s ease-in-out;
-            max-height: 200px; /* Ample space when open */
+            max-height: 200px;
             overflow: hidden;
         }
         #top-panel.collapsed {
-            max-height: 32px; /* Height of the toggle bar */
+            max-height: 32px;
         }
         #top-panel-toggle {
             position: absolute;
@@ -63,9 +64,20 @@
             box-sizing: border-box;
         }
         .input-group, .output-group { display: flex; flex-direction: column; gap: 5px; }
-        .input-group label, .output-group .label { font-weight: 600; font-size: 0.9em; color: #555; }
-        .input-group input, .input-group button { padding: 8px 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; font-family: inherit; outline-color: var(--accent-color); }
-        .output-group .value { font-size: 1.1em; font-weight: bold; color: var(--primary-bg); min-height: 20px; }
+        .input-group label, .output-group .label { font-weight: 600; font-size: 0.9em; color: var(--text-secondary); }
+        
+        /* CHANGE: Dark mode for input fields */
+        .input-group input, .input-group button { 
+            padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 1em; font-family: inherit; outline-color: var(--accent-color);
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+        }
+        /* CHANGE: Hint for browsers to use dark native controls */
+        .input-group input[type="date"] {
+            color-scheme: dark;
+        }
+
+        .output-group .value { font-size: 1.1em; font-weight: bold; color: var(--accent-color); min-height: 20px; }
         #gender-toggle { padding: 8px 20px; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; transition: background-color 0.3s; border: none; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
         #gender-toggle.male { background-color: var(--male-color); }
         #gender-toggle.female { background-color: var(--female-color); }
@@ -73,7 +85,7 @@
         #reset-button:hover { background-color: #c0392b; }
         #main-content { grid-row: 2; grid-column: 1; background-color: var(--secondary-bg); overflow: auto; position: relative; }
         #welcome-screen { display: flex; justify-content: center; align-items: center; gap: 40px; width: 100%; height: 100%; padding: 20px; box-sizing: border-box; }
-        #initial-message { color: var(--light-text); text-align: left; max-width: 500px; font-size: 1.1em; }
+        #initial-message { color: var(--text-color); text-align: left; max-width: 500px; font-size: 1.1em; }
         #initial-message a { color: var(--accent-color); text-decoration: none; }
         #initial-message a:hover { text-decoration: underline; }
         #title-page-canvas { max-width: 40%; max-height: 90%; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
@@ -105,7 +117,6 @@
             transform-origin: center; 
             transition: transform 0.3s;
         }
-        /* CHANGE 1: Corrected rotation logic */
         #right-panel:not(.collapsed) .arrow { transform: rotate(180deg); }
 
         #right-panel-container { min-width: 248px; display: flex; flex-direction: column; }
@@ -114,8 +125,12 @@
         .nav-group:last-child { border-bottom: none; }
         .nav-group label { display: block; font-weight: 600; margin-bottom: 10px; }
         .control-row { display: flex; align-items: center; justify-content: space-between; }
-        .control-row button { font-size: 1.2em; font-weight: bold; padding: 5px 12px; border-radius: 5px; border: 1px solid #ccc; cursor: pointer; background-color: #f1f1f1; }
-        .control-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+        /* CHANGE: Dark mode for right-panel buttons */
+        .control-row button { 
+            font-size: 1.2em; font-weight: bold; padding: 5px 12px; border-radius: 5px; border: 1px solid var(--border-color); cursor: pointer; 
+            background-color: var(--secondary-bg); color: var(--text-color);
+        }
+        .control-row button:disabled { opacity: 0.5; cursor: not-allowed; background-color: var(--panel-bg); }
         .control-row span { font-size: 1.1em; font-weight: 500; text-align: center; flex-grow: 1; }
         .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
         .switch input { display: none; }
@@ -123,7 +138,7 @@
         .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--accent-color); }
         input:checked + .slider:before { transform: translateX(22px); }
-        #loader { font-size: 1.5em; color: var(--light-text); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        #loader { font-size: 1.5em; color: var(--text-color); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
         .page-overlay-nav { position: absolute; top: 0; bottom: 0; width: 15%; display: flex; align-items: center; justify-content: center; font-size: 4em; color: rgba(255, 255, 255, 0.3); cursor: pointer; user-select: none; transition: color 0.2s, background-color 0.2s; z-index: 20; }
         .page-overlay-nav:hover { color: rgba(255, 255, 255, 0.8); background-color: rgba(0,0,0,0.2); }
         .page-overlay-nav.hidden { display: none; }
@@ -177,10 +192,10 @@
                     <h2>Welcome to the Bone Age Tool</h2>
                     <p style="font-style: italic; margin-top: -10px; margin-bottom: 25px;">by George W. Poulos, MD, PhD</p>
                     <p>Please enter the patient's gender and date of birth in the panel above to begin.</p>
-                    <p style="font-size: 0.9em; color: #ccc; margin-top: 20px; line-height: 1.4;">
+                    <p style="font-size: 0.9em; color: var(--text-secondary); margin-top: 20px; line-height: 1.4;">
                         <strong>Please note:</strong> This tool does not directly calculate the patient's bone age. Rather, it is a helpful starting tool for the radiologist.
                     </p>
-                    <p style="font-size: 0.9em; color: #ccc; margin-top: 20px; line-height: 1.4;">
+                    <p style="font-size: 0.9em; color: var(--text-secondary); margin-top: 20px; line-height: 1.4;">
                         Please let me know if you have any further comments or suggestions for this tool. 
                         (<a href="mailto:georgewpoulos@hotmail.com">georgewpoulos@hotmail.com</a>)
                     </p>
@@ -196,7 +211,6 @@
 
         <!-- RIGHT COLLAPSIBLE PANEL -->
         <aside id="right-panel" class="collapsed">
-            <!-- CHANGE 1: Corrected base arrow character -->
             <div id="right-panel-toggle"><span class="arrow">◄</span></div>
             <div id="right-panel-container">
                 <div id="right-panel-content">
