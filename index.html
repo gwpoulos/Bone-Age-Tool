@@ -105,7 +105,8 @@
             transform-origin: center; 
             transition: transform 0.3s;
         }
-        #right-panel.collapsed .arrow { transform: rotate(180deg); }
+        /* CHANGE 1: Corrected rotation logic */
+        #right-panel:not(.collapsed) .arrow { transform: rotate(180deg); }
 
         #right-panel-container { min-width: 248px; display: flex; flex-direction: column; }
         #right-panel-content { padding: 20px; display: flex; flex-direction: column; gap: 20px; flex-grow: 1; }
@@ -195,7 +196,7 @@
 
         <!-- RIGHT COLLAPSIBLE PANEL -->
         <aside id="right-panel" class="collapsed">
-            <!-- CHANGE 1: Arrow character changed -->
+            <!-- CHANGE 1: Corrected base arrow character -->
             <div id="right-panel-toggle"><span class="arrow">◄</span></div>
             <div id="right-panel-container">
                 <div id="right-panel-content">
