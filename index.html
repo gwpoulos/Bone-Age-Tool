@@ -195,6 +195,7 @@
 
         <!-- RIGHT COLLAPSIBLE PANEL -->
         <aside id="right-panel" class="collapsed">
+            <!-- CHANGE 1: Arrow character changed -->
             <div id="right-panel-toggle"><span class="arrow">◄</span></div>
             <div id="right-panel-container">
                 <div id="right-panel-content">
@@ -323,7 +324,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- HELPER FUNCTIONS ---
     function parseDob(dobString) { if (!dobString || dobString.length !== 8) return null; const parts = dobString.split('/'); if (parts.length !== 3) return null; const [mm, dd, yy] = parts; const fullYear = `20${yy}`; const d = new Date(`${fullYear}-${mm}-${dd}T00:00:00`); if (isNaN(d.getTime()) || d.getFullYear() != fullYear || (d.getMonth() + 1) != mm || d.getDate() != dd) { return null; } return d; }
-    // CHANGE 1: Modified function to return a specific error string
     function calculateChronologicalAge(dob, studyDate) { if (!dob || !studyDate) return null; let d1 = dob; let d2 = new Date(studyDate); if (d1.getTime() > d2.getTime()) return 'invalid_date_range'; let d1_utc = new Date(Date.UTC(d1.getUTCFullYear(), d1.getUTCMonth(), d1.getUTCDate())); let d2_utc = new Date(Date.UTC(d2.getUTCFullYear(), d2.getUTCMonth(), d2.getUTCDate())); let years = d2_utc.getUTCFullYear() - d1_utc.getUTCFullYear(); let months = d2_utc.getUTCMonth() - d1_utc.getUTCMonth(); if (d2_utc.getUTCDate() < d1_utc.getUTCDate()) { months--; } if (months < 0) { years--; months += 12; } let dayDiff = d2_utc.getUTCDate() - d1_utc.getUTCDate(); if (dayDiff < 0) { let daysInPrevMonth = new Date(d2_utc.getUTCFullYear(), d2_utc.getUTCMonth(), 0).getDate(); dayDiff += daysInPrevMonth; } if (dayDiff >= 15) { months++; if (months === 12) { months = 0; years++; } } return { years, months, totalMonths: (years * 12) + months }; }
     function findClosestSd(totalMonths, gender) { const data = (gender === 'Male') ? standardDeviations.boys : standardDeviations.girls; if (!data || data.length === 0) return null; let closest = data.reduce((prev, curr) => (Math.abs(curr.chronologicalMonths - totalMonths) < Math.abs(prev.chronologicalMonths - totalMonths) ? curr : prev)); return closest.sdMonths; }
     function findClosestAtlasIndex(totalMonths, gender) { const genderSpecificAtlas = atlasIndex.map((entry, index) => ({...entry, originalIndex: index})).filter(entry => entry.gender === gender); if (genderSpecificAtlas.length === 0) return -1; const closestEntry = genderSpecificAtlas.reduce((prev, curr) => (Math.abs(curr.ageInMonths - totalMonths) < Math.abs(prev.ageInMonths - totalMonths) ? curr : prev)); return closestEntry.originalIndex; }
@@ -416,7 +416,6 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.showDataBtn.style.display = onTitlePage ? 'none' : 'block';
     }
 
-    // CHANGE 1: Updated function to handle all date/age states
     function handlePatientDataUpdate() {
         const dobString = dom.dobInput.value; const studyDate = dom.studyDateInput.value; const dob = parseDob(dobString);
         
@@ -461,8 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.studyDateInput.addEventListener('change', handlePatientDataUpdate);
     dom.resetButton.addEventListener('click', () => { 
         dom.dobInput.value = ''; setDefaultStudyDate(); state.patientGender = 'Male'; dom.genderToggle.textContent = 'Male'; dom.genderToggle.className = 'male'; dom.showDataBtn.className = 'data-button male'; dom.annotatedToggle.checked = false; state.isAnnotated = false; state.zoom = 1.0; state.isPatientDataEntered = false;
-        state.currentPageNum = 1;
-        state.currentAtlasEntryIndex = -1; 
+        state.currentPageNum = 1; state.currentAtlasEntryIndex = -1; 
         handlePatientDataUpdate(); 
         dom.rightPanel.classList.add('collapsed'); 
         updateUiForCurrentPage(); 
